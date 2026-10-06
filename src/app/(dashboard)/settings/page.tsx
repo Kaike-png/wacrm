@@ -20,6 +20,8 @@ import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel'
 import { DealsSettings } from '@/components/settings/deals-settings';
 // FORK-PATCH(P-004): regional format + time zone card — docs/LOCALIZATION.md
 import { RegionalSettings } from '@/custom/locale/regional-settings';
+// FORK-PATCH(P-006): organization (tenant) registration — docs/TENANCY.md
+import { OrganizationSettings } from '@/modules/br/organization-settings';
 import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import {

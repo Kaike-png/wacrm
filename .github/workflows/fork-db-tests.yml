@@ -1,0 +1,46 @@
+# Fork-owned: database tests (tenant isolation / RLS). docs/TENANCY.md
+#
+# Separate from the upstream migrations.yml so merges never conflict.
+# Applies every migration to a clean Postgres and runs the pgTAP suites
+# in supabase/tests/database/ (scripts/fork/test-db.sh).
+name: DB tests (tenant isolation)
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'scripts/fork/test-db.sh'
+      - '.github/workflows/fork-db-tests.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - 'supabase/**'
+      - 'scripts/fork/test-db.sh'
+      - '.github/workflows/fork-db-tests.yml'
+
+concurrency:
+  group: fork-db-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolation:
+    name: Tenant isolation (pgTAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install the Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.113.0
+
+      - name: Start Postgres
+        run: supabase db start
+
+      - name: Replay every migration from scratch
+        run: supabase db reset --local --no-seed
+
+      - name: Run the database tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: ./scripts/fork/test-db.sh

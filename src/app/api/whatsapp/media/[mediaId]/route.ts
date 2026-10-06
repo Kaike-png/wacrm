@@ -80,7 +80,10 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': contentType || mediaInfo.mimeType || 'application/octet-stream',
-        'Cache-Control': 'public, max-age=86400',
+        // FORK-PATCH(P-006): tenant media behind auth must never sit in a shared
+        // cache (CDN/proxy) where another tenant could get it — docs/TENANCY.md
+        'Cache-Control': 'private, max-age=86400',
+        Vary: 'Cookie',
       },
     })
   } catch (error) {
