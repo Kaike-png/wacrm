@@ -1,4 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
+// FORK-PATCH(P-002): layer fork-owned strings — docs/UPSTREAM_STRATEGY.md
+import { withCustomMessages } from '@/custom/i18n/merge';
 
 export default getRequestConfig(async () => {
   // Read the locale from the environment, defaulting to 'en'

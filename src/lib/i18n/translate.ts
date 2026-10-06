@@ -1,4 +1,6 @@
 import { createTranslator } from 'next-intl';
+// FORK-PATCH(P-002): layer fork-owned strings — docs/UPSTREAM_STRATEGY.md
+import { withCustomMessages } from '@/custom/i18n/merge';
 
 /**
  * Translator for code that runs outside React — API route handlers,
@@ -26,6 +28,11 @@ function loadCatalogue(): { locale: string; messages: Catalogue } {
 
 let cached: { locale: string; messages: Catalogue } | null = null;
 
+// FORK-PATCH(P-002): merged once per process, alongside the cache.
+function withCustomCatalogue(c: { locale: string; messages: Catalogue }) {
+  return { locale: c.locale, messages: withCustomMessages(c.locale, c.messages) };
+}
+
 export type TranslateValues = Record<string, string | number | Date>;
 export type Translate = (key: string, values?: TranslateValues) => string;
 
@@ -35,7 +42,7 @@ export type Translate = (key: string, values?: TranslateValues) => string;
  * catalogue; literal WhatsApp `{{1}}` must be passed in as a value.
  */
 export function getT(namespace: string): Translate {
-  cached ??= loadCatalogue();
+  cached ??= withCustomCatalogue(loadCatalogue()); // FORK-PATCH(P-002)
   const t = createTranslator({
     locale: cached.locale,
     messages: cached.messages,

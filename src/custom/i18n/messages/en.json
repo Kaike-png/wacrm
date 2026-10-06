@@ -1,0 +1,750 @@
+{
+  "Custom": {
+    "brand": {
+      "description": "WhatsApp CRM with a shared inbox, contacts, sales pipelines, broadcasts and automations.",
+      "supportPrompt": "Need help?",
+      "emails": {
+        "footer": "You received this email because of an action on your {appName} account. If it wasn't you, you can ignore it.",
+        "supportLine": "Questions? Write to {email}.",
+        "fallbackLink": "If the button doesn't work, copy and paste this link into your browser:",
+        "confirmation": {
+          "subject": "Confirm your {appName} account",
+          "heading": "Confirm your email",
+          "body": "Thanks for signing up for {appName}. Confirm your email address to activate your account.",
+          "cta": "Confirm email"
+        },
+        "recovery": {
+          "subject": "Reset your {appName} password",
+          "heading": "Reset your password",
+          "body": "We received a request to reset the password of your {appName} account. The link is valid for a limited time.",
+          "cta": "Choose a new password"
+        },
+        "emailChange": {
+          "subject": "Confirm your new {appName} email",
+          "heading": "Confirm your new email",
+          "body": "Confirm that you want to change the email of your {appName} account to this address.",
+          "cta": "Confirm new email"
+        }
+      }
+    },
+    "locale": {
+      "settings": {
+        "title": "Date, time and number format",
+        "description": "How dates, times and numbers are shown to the whole team, and the time zone automations use for time-of-day conditions.",
+        "formatLabel": "Regional format",
+        "timezoneLabel": "Time zone",
+        "timezoneBrazil": "Brazil",
+        "timezoneOthers": "Other time zones",
+        "preview": "Preview: {datetime} · {number} · {money}",
+        "languageHint": "The interface language is set per installation (NEXT_PUBLIC_APP_LOCALE).",
+        "unavailable": "Regional settings are not available yet: apply the database migration 900_custom_account_locale.sql. Until then the defaults are used ({locale}, {timezone}).",
+        "adminOnlyHint": "Only account admins can change the regional settings.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saveFailed": "Could not save the regional settings",
+        "saveSuccess": "Regional settings updated"
+      }
+    },
+    "flows": {
+      "edges": {
+        "true": "true",
+        "false": "false",
+        "next": "Next"
+      },
+      "contactFields": {
+        "name": "name",
+        "email": "email",
+        "phone": "phone",
+        "company": "company"
+      }
+    },
+    "theme": {
+      "modes": {
+        "light": "light",
+        "dark": "dark"
+      },
+      "names": {
+        "violet": "Violet",
+        "emerald": "Emerald",
+        "cobalt": "Cobalt",
+        "amber": "Amber",
+        "rose": "Rose"
+      },
+      "taglines": {
+        "violet": "The default — confident, slightly playful.",
+        "emerald": "Growth-coded, nods at messaging without copying WhatsApp green.",
+        "cobalt": "Clean B2B-SaaS blue — calm and product-y.",
+        "amber": "Warm and friendly — feels good for SMB teams.",
+        "rose": "Bold and modern — D2C, creator-economy, lifestyle."
+      }
+    },
+    "onboarding": {
+      "title": "Initial setup",
+      "stepOf": "Step {current} of {total}",
+      "stepTitle": "{current} of {total} — {title}",
+      "progressLabel": "Setup progress",
+      "accountCreated": "Account created",
+      "skippedTag": "later",
+      "skipAll": "Skip and go to the dashboard",
+      "adminOnly": "The initial setup is done by whoever manages the organization. Ask an admin to finish it, or continue to the dashboard.",
+      "nav": {
+        "back": "Back",
+        "skip": "Do it later",
+        "continue": "Continue"
+      },
+      "steps": {
+        "organization": {
+          "short": "Organization",
+          "title": "Your organization",
+          "description": "Your account already has an organization: it holds contacts, conversations and the team. Give it a name and confirm language, time zone and currency."
+        },
+        "company": {
+          "short": "Company details",
+          "title": "Company details",
+          "description": "Tax ID, legal name and company contact. Used on documents and invoices."
+        },
+        "team": {
+          "short": "Team",
+          "title": "Invite your team",
+          "description": "Create invite links for the people who will work with you. You can also do this later in Settings → Team members."
+        },
+        "whatsapp": {
+          "short": "WhatsApp",
+          "title": "Connect WhatsApp",
+          "description": "Link your WhatsApp Business number to the CRM to receive and send messages."
+        }
+      },
+      "organization": {
+        "name": "Organization name",
+        "namePlaceholder": "e.g. Acme Bakery",
+        "nameHint": "Shown to your team and in invites.",
+        "nameRequired": "Enter the organization name.",
+        "nameTooLong": "Use at most {max} characters.",
+        "locale": "Language and format",
+        "timezone": "Time zone",
+        "timezoneBrazil": "Brazil",
+        "timezoneOthers": "Other time zones",
+        "currency": "Currency",
+        "regionalHint": "Date and number format, time zone and deal currency. You can change them later in Settings → Region & currency.",
+        "saveFailed": "Could not save the organization."
+      },
+      "company": {
+        "optionalHint": "Everything here is optional; fill in what you have at hand.",
+        "fix": "Fix the highlighted fields.",
+        "saveFailed": "Could not save the company details.",
+        "unavailable": "Company details are not available on this installation yet. Continue to the next step."
+      },
+      "team": {
+        "intro": "Each person gets a single-use link and picks their own password. You choose what they can do:",
+        "roles": {
+          "admin": "Manages settings, team and integrations.",
+          "agent": "Handles conversations, contacts and deals.",
+          "viewer": "Can view, not edit."
+        },
+        "create": "Create invite link",
+        "pending": "{count, plural, =1 {1 pending invite} other {# pending invites}}",
+        "validUntil": "valid until {date}",
+        "none": "No invites yet. You can invite the team later."
+      },
+      "whatsapp": {
+        "beforeTitle": "Before you start, have at hand:",
+        "before1": "A Meta Business account (business.facebook.com).",
+        "before2": "An app on Meta for Developers with the WhatsApp product added.",
+        "before3": "The number you will use — Meta's test number is fine to try things out.",
+        "openMeta": "Open Meta for Developers",
+        "phoneNumberId": "Phone number ID",
+        "phoneNumberIdHint": "In the app: WhatsApp → API Setup, right under the number. Digits only.",
+        "wabaId": "WhatsApp Business Account ID",
+        "wabaIdHint": "On the same page, under “WhatsApp Business Account ID”.",
+        "token": "Access token",
+        "tokenHint": "The temporary token on the API page expires in 24 hours. For real use, create a permanent system-user token with whatsapp_business_messaging and whatsapp_business_management:",
+        "systemUsers": "System users",
+        "showToken": "Show token",
+        "hideToken": "Hide token",
+        "pin": "Two-step verification PIN (optional)",
+        "pinHint": "6 digits. Only for your own (production) number; test numbers don't need it.",
+        "pinInvalid": "The PIN has 6 digits.",
+        "missingFields": "Fill in the phone number ID, the WhatsApp Business Account ID and the token.",
+        "connect": "Test and connect",
+        "connectFailed": "Could not connect. Check the details and try again.",
+        "connected": "WhatsApp connected",
+        "connectedTitle": "Connected: {phone}",
+        "alreadyConnected": "This number is already connected. To change or tune it, use the advanced settings.",
+        "registrationSkipped": "Number saved without registration (no PIN). For production numbers, enter the PIN in the advanced settings to receive messages.",
+        "webhookTitle": "Last step: tell Meta where to deliver messages",
+        "webhookStep1": "In your Meta app, open WhatsApp → Configuration → Webhook → Edit.",
+        "webhookStep2": "Paste the callback URL and verify token below and click Verify and save.",
+        "webhookStep3": "Under Webhook fields, subscribe to “messages”.",
+        "webhookUrl": "Callback URL",
+        "verifyToken": "Verify token",
+        "verifyTokenHint": "Copy it now: it is stored encrypted and not shown again. If you lose it, generate a new one in the advanced settings.",
+        "copy": "Copy",
+        "later": "Set up later",
+        "advancedHint": "Prefer the full screen, with diagnostics and number registration?",
+        "advancedLink": "Open advanced settings",
+        "businessId": "Meta Business ID (optional)",
+        "businessIdHint": "In Business Settings → Business info. Helps support find your account."
+      },
+      "done": {
+        "badge": "All set",
+        "title": "All set!",
+        "description": "Your organization is set up. Here is what was left for later — you can finish it any time.",
+        "companyDone": "Registration details filled in",
+        "later": "Later",
+        "invites": "{count, plural, =1 {1 invite sent} other {# invites sent}}",
+        "whatsappDone": "Number connected",
+        "whatsappLater": "Later — no messages arrive without WhatsApp",
+        "doNow": "Do it now",
+        "whereLater": "You will find all of this later in Settings.",
+        "toDashboard": "Go to the dashboard",
+        "toInbox": "Open the inbox",
+        "toSettings": "Go to Settings"
+      }
+    },
+    "whatsapp": {
+      "api": {
+        "adminOnly": "Only admins can change the WhatsApp connection.",
+        "businessIdInvalid": "The Meta Business ID must contain digits only (business portfolio ID)."
+      },
+      "status": {
+        "title": "Connection status",
+        "test": "Test connection",
+        "testOk": "Connection OK",
+        "testPending": "Credentials valid, but a step is pending",
+        "testNoConfig": "No configuration saved",
+        "testFailed": "Connection test failed",
+        "loadFailed": "Could not load the connection status.",
+        "phoneNumberId": "Phone number ID",
+        "wabaId": "WhatsApp Business Account (WABA)",
+        "businessId": "Meta Business ID",
+        "editBusinessId": "Edit Meta Business ID",
+        "businessIdInvalid": "Invalid Business ID: digits only.",
+        "businessIdSaved": "Business ID saved",
+        "save": "Save",
+        "token": "Access token",
+        "hidden": "hidden",
+        "verifyToken": "Verify token",
+        "pin": "PIN (two-step verification)",
+        "configured": "configured",
+        "notConfigured": "not configured",
+        "registered": "Number registered",
+        "subscribed": "WABA subscribed to the app",
+        "lastWebhook": "Last webhook received",
+        "lastChecked": "Last test",
+        "no": "no",
+        "never": "never",
+        "history": "Connection history",
+        "states": {
+          "connected": {
+            "label": "Connected",
+            "description": "Credentials valid and Meta is delivering this number's messages."
+          },
+          "pending": {
+            "label": "Pending",
+            "description": "Credentials valid, but a step is missing to receive messages: subscribe the WABA to the app (webhook) or register the number with the PIN."
+          },
+          "error": {
+            "label": "Error",
+            "description": "Meta rejected the last check. See the reason below, fix it in the configuration and test again."
+          },
+          "disconnected": {
+            "label": "Disconnected",
+            "description": "No WhatsApp number is connected to this organization."
+          }
+        },
+        "events": {
+          "saved": "configuration saved",
+          "save_failed": "save failed",
+          "tested": "connection test",
+          "registered": "number registered",
+          "registration_failed": "registration failed",
+          "disconnected": "disconnected",
+          "webhook_received": "webhooks arriving",
+          "webhook_rejected": "webhook rejected"
+        }
+      }
+    },
+    "platform": {
+      "title": "Platform panel",
+      "backToApp": "Back to the app",
+      "signedInAs": "Signed in as {email}",
+      "nav": {
+        "organizations": "Organizations",
+        "audit": "Audit log",
+        "plans": "Plans"
+      },
+      "status": {
+        "trial": "Trial",
+        "active": "Active",
+        "past_due": "Past due",
+        "suspended": "Suspended",
+        "cancelled": "Cancelled"
+      },
+      "list": {
+        "title": "Organizations",
+        "subtitle": "{count, plural, =0 {No organizations} one {# organization} other {# organizations}}",
+        "searchPlaceholder": "Name, legal name, tax ID, owner e-mail, organization ID, phone number ID or WABA",
+        "search": "Search",
+        "allStatuses": "All statuses",
+        "clear": "Clear",
+        "empty": "No organization found.",
+        "columns": {
+          "organization": "Organization",
+          "status": "Status",
+          "plan": "Plan",
+          "users": "Users",
+          "contacts": "Contacts",
+          "whatsapp": "WhatsApp",
+          "usage": "Messages (30 days)",
+          "errors": "Errors",
+          "createdAt": "Created"
+        },
+        "noPlan": "No plan",
+        "noWhatsapp": "Not connected",
+        "errorsCount": "{count, plural, =0 {—} one {# error} other {# errors}}",
+        "page": "Page {page} of {pages}",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "whatsappStatus": {
+        "connected": "Connected",
+        "pending": "Pending",
+        "error": "Error",
+        "disconnected": "Disconnected"
+      },
+      "detail": {
+        "back": "Organizations",
+        "createdAt": "Created {date}",
+        "statusSince": "Status since {date}",
+        "trialEnds": "Trial until {date}",
+        "owner": "Owner",
+        "taxId": "Tax ID",
+        "legalName": "Legal name",
+        "tradeName": "Trade name",
+        "contactEmail": "E-mail",
+        "contactPhone": "Phone",
+        "city": "City",
+        "regional": "Language · time zone · currency",
+        "id": "Organization ID",
+        "sections": {
+          "overview": "Organization",
+          "plan": "Plan",
+          "usage": "Usage",
+          "members": "Users",
+          "wabas": "WhatsApp (WABAs)",
+          "errors": "Integration errors",
+          "audit": "Audit log for this organization",
+          "actions": "Actions",
+          "entitlements": "Plan limits",
+          "usageMonth": "Usage this month"
+        },
+        "usage": {
+          "users": "Users",
+          "contacts": "Contacts",
+          "conversations": "Conversations",
+          "messagesIn": "Messages received (30 days)",
+          "messagesOut": "Messages sent (30 days)",
+          "messagesFailed": "Failed sends (30 days)",
+          "broadcasts": "Broadcasts (30 days)",
+          "aiTokens": "AI tokens (30 days)",
+          "automations": "Active automations",
+          "apiKeys": "Active API keys",
+          "lastMessage": "Last message"
+        },
+        "members": {
+          "name": "Name",
+          "email": "E-mail",
+          "role": "Role",
+          "since": "Since",
+          "roles": {
+            "owner": "Owner",
+            "admin": "Admin",
+            "agent": "Agent",
+            "viewer": "Viewer"
+          }
+        },
+        "wabas": {
+          "none": "No WhatsApp number connected.",
+          "phoneNumberId": "Phone number ID",
+          "wabaId": "WABA ID",
+          "businessId": "Meta Business ID",
+          "status": "Status",
+          "registered": "Registered",
+          "subscribed": "WABA subscribed",
+          "lastWebhook": "Last webhook",
+          "lastChecked": "Last test",
+          "credentials": "Credentials",
+          "credentialsValue": "token {token} · verify token {verify} · PIN {pin}",
+          "set": "set",
+          "unset": "missing",
+          "secretsNote": "Tokens and PIN are never shown in this panel."
+        },
+        "errors": {
+          "none": "No integration errors recorded.",
+          "whatsappCheck": "Last WhatsApp test",
+          "whatsappRegistration": "Number registration",
+          "events": "WhatsApp events",
+          "failedMessages": "Failed sends (30 days)",
+          "failedCount": "{count, plural, one {# time} other {# times}}",
+          "webhooks": "Failing outgoing webhooks",
+          "webhookFailures": "{count, plural, one {# consecutive failure} other {# consecutive failures}}",
+          "automations": "Failed automations",
+          "noCode": "no code"
+        },
+        "never": "never",
+        "no": "no"
+      },
+      "actions": {
+        "suspend": "Suspend",
+        "reactivate": "Reactivate",
+        "changePlan": "Change plan",
+        "suspendTitle": "Suspend {name}?",
+        "suspendBody": "Blocks sending messages, campaigns, automations and new integrations. Users still sign in, view and export their data; inbound messages keep reaching the inbox. Nothing is deleted. A payment does not lift a suspension made by the team.",
+        "reactivateTitle": "Reactivate {name}?",
+        "reactivateBody": "The organization returns to its status before the suspension and sending is unlocked.",
+        "planTitle": "Plan for {name}",
+        "planBody": "Until billing exists, the plan is set by hand. The change is recorded in the audit log.",
+        "reason": "Reason",
+        "reasonRequired": "Reason (required)",
+        "reasonPlaceholder": "E.g. 60 days overdue, customer request, abuse…",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "noPlan": "No plan",
+        "suspended": "Organization suspended",
+        "reactivated": "Organization reactivated",
+        "planChanged": "Plan updated",
+        "errors": {
+          "invalid_transition": "This action does not apply to the organization's current status.",
+          "reason_required": "Enter a reason.",
+          "not_found": "Organization not found.",
+          "invalid_input": "Unknown or inactive plan.",
+          "failed": "The action could not be completed."
+        }
+      },
+      "audit": {
+        "title": "Audit log",
+        "subtitle": "Administrative actions on the platform. Entries cannot be edited or deleted.",
+        "empty": "No actions recorded.",
+        "reason": "Reason: {reason}",
+        "from": "from {ip}",
+        "noPlan": "no plan",
+        "sentence": {
+          "organization_viewed": "Admin {actor} viewed the organization {organization} on {date} at {time}.",
+          "organization_suspended": "Admin {actor} suspended the organization {organization} on {date} at {time}.",
+          "organization_reactivated": "Admin {actor} reactivated the organization {organization} on {date} at {time} ({from} → {to}).",
+          "organization_plan_changed": "Admin {actor} changed the plan of {organization} from {from} to {to} on {date} at {time}.",
+          "platform_admin_granted": "{actor} granted platform admin access to {email} on {date} at {time}.",
+          "platform_admin_revoked": "{actor} revoked platform admin access from {email} on {date} at {time}.",
+          "billing_plan_updated": "Admin {actor} changed the {plan} plan on {date} at {time}.",
+          "organization_billing_suspended": "The system suspended {organization} for non-payment on {date} at {time}.",
+          "organization_billing_reactivated": "The system reactivated {organization} after payment on {date} at {time} ({from} → {to})."
+        }
+      },
+      "plans": {
+        "title": "Plans",
+        "subtitle": "Limits and features of each plan. The app reads these values by key; changes apply within 30 seconds and are audited.",
+        "feature": "Feature",
+        "organizations": "{count, plural, =0 {no organizations} one {# organization} other {# organizations}}",
+        "default": "Default for new organizations",
+        "active": "Active",
+        "inactive": "Inactive",
+        "unlimitedHint": "empty = unlimited",
+        "name": "Name",
+        "save": "Save plan",
+        "reason": "Reason for the change (optional)",
+        "saved": "Plan saved",
+        "invalid": "Invalid value for {feature}: use a whole number ≥ 0 or leave empty for unlimited.",
+        "edit": "Edit",
+        "cancel": "Cancel",
+        "catalogDefault": "No value in the plan: uses the catalog default ({value}).",
+        "price": "Monthly price",
+        "priceHint": "empty = not sold online",
+        "priceInvalid": "Invalid price: use a value like 99.90"
+      }
+    },
+    "billing": {
+      "title": "Plan and usage",
+      "noPlan": "No plan",
+      "noPlanDescription": "This organization has no plan yet: features are unlimited.",
+      "included": "Included",
+      "notIncluded": "Not included",
+      "usageOf": "{used} of {limit}",
+      "usageUnlimited": "{used} · unlimited",
+      "upgradeContact": "To change plans, contact {email}.",
+      "upgradeGeneric": "To change plans, contact support.",
+      "features": {
+        "max_users": "Users",
+        "max_whatsapp_accounts": "WhatsApp numbers",
+        "max_contacts": "Contacts",
+        "max_automations": "Automations",
+        "ai_enabled": "Artificial intelligence",
+        "api_enabled": "Public API"
+      },
+      "notice": {
+        "ai_enabled": {
+          "title": "AI is not included in the {plan} plan",
+          "body": "Auto-replies, drafts and the knowledge base are disabled. Change plans to use the assistant."
+        },
+        "api_enabled": {
+          "title": "The public API is not included in the {plan} plan",
+          "body": "API keys cannot be created and existing keys stop working. Change plans to integrate other systems."
+        }
+      },
+      "limitReached": {
+        "max_users": "You reached the limit of {limit, plural, one {# user} other {# users}} {plan, select, none {of your plan} other {of the {plan} plan}} (pending invitations count).",
+        "max_whatsapp_accounts": "You reached the limit of {limit, plural, one {# WhatsApp number} other {# WhatsApp numbers}} {plan, select, none {of your plan} other {of the {plan} plan}}.",
+        "max_contacts": "You reached the limit of {limit, plural, one {# contact} other {# contacts}} {plan, select, none {of your plan} other {of the {plan} plan}}.",
+        "max_automations": "You reached the limit of {limit, plural, one {# automation} other {# automations}} {plan, select, none {of your plan} other {of the {plan} plan}}.",
+        "ai_enabled": "Artificial intelligence is not included {plan, select, none {in your plan} other {in the {plan} plan}}.",
+        "api_enabled": "The public API is not included {plan, select, none {in your plan} other {in the {plan} plan}}.",
+        "generic": "This action exceeds your plan's limit."
+      },
+      "upgrade": {
+        "limited": "Upgrade to the {upgrade} plan (up to {value, number}).",
+        "unlimited": "Upgrade to the {upgrade} plan (unlimited).",
+        "flag": "Available from the {upgrade} plan.",
+        "none": "Contact support to expand your plan."
+      },
+      "usage": {
+        "title": "Usage this month",
+        "period": "{start} to {end} ({timeZone})",
+        "stock": "Records",
+        "activity": "Activity this month",
+        "users": "Users",
+        "usersDetail": "{active} active in the last 30 days · {pending, plural, =0 {no pending invitations} one {# pending invitation} other {# pending invitations}}",
+        "contacts": "Contacts",
+        "contactsDetail": "{created} new this month",
+        "whatsapp": "WhatsApp accounts",
+        "whatsappDetail": "{connected} connected",
+        "automations": "Automations",
+        "automationsDetail": "{active} active",
+        "messagesSent": "Messages sent",
+        "messagesReceived": "Messages received",
+        "messagesFailed": "{failed} failed",
+        "campaigns": "Campaigns created",
+        "campaignsDetail": "{recipients} campaign sends",
+        "ai": "AI usage",
+        "aiDetail": "{requests} calls · {replies} auto-replies",
+        "aiTokens": "{tokens} tokens",
+        "aiOff": "not included in the plan",
+        "limitOf": "of {limit}",
+        "unlimited": "unlimited"
+      },
+      "subscription": {
+        "title": "Subscription",
+        "sandbox": "Test environment · {provider}",
+        "status": {
+          "manual": "{plan} plan (no online billing)",
+          "pending": "{plan} plan · waiting for the first payment",
+          "active": "{plan} plan · subscription active",
+          "past_due": "{plan} plan · payment overdue",
+          "canceled": "{plan} plan · subscription canceled"
+        },
+        "renewsOn": "Next charge on {date}.",
+        "endsOn": "The plan is valid until {date}; then it returns to the default plan.",
+        "pendingChange": "Switching to the {plan} plan once the payment is confirmed.",
+        "expiresAt": "Code valid until {date}",
+        "qrAlt": "Pix QR code",
+        "copyPaste": "Pix copy and paste",
+        "copy": "Copy",
+        "copied": "Copied",
+        "alreadyPaid": "I already paid",
+        "refreshed": "Payment status updated",
+        "simulatePaid": "Simulate payment",
+        "simulatedPaid": "Payment simulated",
+        "simulateOverdue": "Simulate overdue",
+        "simulatedOverdue": "Overdue simulated",
+        "priceOnRequest": "On request",
+        "perMonth": "{price}/month",
+        "perYear": "{price}/year",
+        "currentPlan": "Current plan",
+        "subscribe": "Subscribe to {plan}",
+        "chargeCreated": "Charge created: pay with the Pix below",
+        "history": "Payments",
+        "paymentStatus": {
+          "pending": "Pending",
+          "paid": "Paid",
+          "overdue": "Overdue",
+          "refunded": "Refunded",
+          "canceled": "Canceled",
+          "failed": "Failed"
+        },
+        "cancel": "Cancel subscription",
+        "cancelConfirm": "Cancel the subscription? The plan stays valid until the end of the paid period.",
+        "canceled": "Subscription canceled",
+        "errors": {
+          "plan_not_purchasable": "This plan cannot be purchased online.",
+          "already_on_plan": "The organization is already on this plan.",
+          "tax_id_required": "Enter the organization's tax ID (Settings → Organization) to create the charge.",
+          "method_not_supported": "Payment method unavailable.",
+          "no_subscription": "There is no subscription to cancel.",
+          "provider_changed": "Cancel the current subscription before switching billing methods.",
+          "provider_error": "The payment provider did not respond. Try again shortly.",
+          "provider_unavailable": "Online billing is unavailable right now.",
+          "not_found": "Payment not found.",
+          "failed": "Could not complete. Try again."
+        },
+        "methodLabel": "Pay with",
+        "methods": {
+          "pix": "Pix",
+          "boleto": "Boleto",
+          "card": "Credit card"
+        },
+        "boletoLine": "Boleto digitable line",
+        "openBoleto": "Open boleto (PDF)",
+        "openInvoice": "Open invoice",
+        "payWithCard": "Pay by card",
+        "payWith": {
+          "pix": "Pay {amount} with Pix",
+          "boleto": "Pay {amount} with boleto",
+          "card": "Pay {amount} by card",
+          "other": "Pay {amount}"
+        }
+      },
+      "access": {
+        "blocked": {
+          "messages": {
+            "send": "Sending messages is blocked."
+          },
+          "campaigns": {
+            "send": "Sending campaigns is blocked."
+          },
+          "automations": {
+            "run": "Automations are paused."
+          },
+          "integrations": {
+            "create": "New integrations are blocked."
+          }
+        },
+        "reason": {
+          "past_due": "A payment is overdue.",
+          "suspended": "The organization is suspended. Settle the payment in Settings → Organization → Subscription to unlock.",
+          "cancelled": "The organization is cancelled. Contact support to reactivate."
+        },
+        "notice": {
+          "payment_due": {
+            "title": "Payment overdue",
+            "body": "Pay to avoid suspension. Until then everything keeps working.",
+            "deadline": "Without payment, sending, campaigns and automations will be blocked on {date}."
+          },
+          "suspended": {
+            "title": "Organization suspended for non-payment",
+            "body": "Sending messages, campaigns, automations and new integrations are blocked. Your data stays available: you can view, export and pay at any time — nothing was deleted.",
+            "platform": "Organization suspended by the platform team",
+            "platformBody": "Sending messages, campaigns, automations and new integrations are blocked. Your data stays available and nothing was deleted. Contact support to reactivate."
+          },
+          "cancelled": {
+            "title": "Organization cancelled",
+            "body": "Sending is off. Your data stays available to view and export — nothing was deleted. Contact support to reactivate."
+          },
+          "pay": "Settle payment",
+          "support": "Contact support"
+        }
+      }
+    },
+    "export": {
+      "title": "Export data",
+      "body": "Download your contacts as CSV. Export is always available, even when the organization is suspended.",
+      "contacts": "Export contacts (CSV)"
+    }
+  },
+  "Br": {
+    "phone": {
+      "hintBrazil": "Include the area code (DDD), e.g. (21) 99999-9999. For other countries, start with + and the country code.",
+      "willSaveAs": "Will be saved as {phone}",
+      "errors": {
+        "empty": "Enter a phone number.",
+        "needsCountryCode": "Include the country code — the number must start with + (e.g. +1 415 555 0123).",
+        "missingAreaCode": "Include the area code (DDD), e.g. (21) 99999-9999.",
+        "invalidAreaCode": "This area code (DDD) does not exist in Brazil.",
+        "invalidBrazilianNumber": "This is not a valid Brazilian number: mobiles have 9 digits starting with 9, landlines 8 digits.",
+        "invalid": "Invalid phone number."
+      }
+    },
+    "contacts": {
+      "sectionTitle": "Registration details",
+      "sectionHint": "Optional. CPF/CNPJ and address are stored without masks.",
+      "show": "Add CPF/CNPJ and address",
+      "personType": "Person type",
+      "personTypes": {
+        "none": "Not specified",
+        "PF": "Individual (pessoa física)",
+        "PJ": "Company (pessoa jurídica)"
+      },
+      "cpf": "CPF",
+      "cnpj": "CNPJ",
+      "legalName": "Legal name (razão social)",
+      "tradeName": "Trade name (nome fantasia)",
+      "address": "Address",
+      "postalCode": "CEP",
+      "street": "Street",
+      "streetNumber": "Number",
+      "complement": "Complement",
+      "district": "District",
+      "city": "City",
+      "state": "State",
+      "statePlaceholder": "State",
+      "cepLookup": "Look up CEP",
+      "unavailable": "Registration details are not available yet: apply migration 901_br_contact_profiles.sql.",
+      "readOnly": "Your role can view but not edit these details.",
+      "saveFailed": "Could not save the registration details",
+      "errors": {
+        "invalidCpf": "Invalid CPF — check the digits.",
+        "invalidCnpj": "Invalid CNPJ — check the digits.",
+        "invalidCep": "The CEP must have 8 digits.",
+        "invalidState": "Invalid state.",
+        "tooLong": "Too long."
+      }
+    },
+    "organization": {
+      "title": "Organization",
+      "description": "Your company's details in this CRM. They apply to the whole team and appear on documents and invoices.",
+      "status": "Status",
+      "trialDaysLeft": "{days, plural, =0 {ends today} =1 {1 day left} other {# days left}}",
+      "trialEndsOn": "The trial ends on {date}.",
+      "name": "Organization name",
+      "currency": "Currency",
+      "language": "Language and format",
+      "timezone": "Time zone",
+      "regionalLink": "Change currency, language and time zone in Region & currency",
+      "registration": "Registration details",
+      "phone": "Phone",
+      "email": "Email",
+      "save": "Save",
+      "saved": "Organization updated",
+      "saveFailed": "Could not save the organization",
+      "unavailable": "Registration details are not available yet: apply migration 902_br_organization_profile.sql.",
+      "adminOnly": "Only admins can change the organization details.",
+      "errors": {
+        "nameRequired": "Enter the organization name.",
+        "fix": "Fix the highlighted fields.",
+        "invalidEmail": "Invalid email."
+      },
+      "wizardLink": "Open the initial setup wizard"
+    }
+  },
+  "Billing": {
+    "status": {
+      "trial": {
+        "label": "Trial",
+        "description": "The organization is in its trial period."
+      },
+      "active": {
+        "label": "Active",
+        "description": "Subscription in good standing."
+      },
+      "past_due": {
+        "label": "Past due",
+        "description": "A payment is overdue. Settle it to avoid suspension."
+      },
+      "suspended": {
+        "label": "Suspended",
+        "description": "The organization is suspended. Contact support to reactivate it."
+      },
+      "cancelled": {
+        "label": "Cancelled",
+        "description": "The subscription was cancelled."
+      }
+    }
+  }
+}
