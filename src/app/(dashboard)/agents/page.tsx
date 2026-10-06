@@ -9,6 +9,8 @@ import { AiUsageCard } from '@/components/agents/ai-usage';
 import { AiConfig } from '@/components/settings/ai-config';
 import { useAuth } from '@/hooks/use-auth';
 import { canEditSettings } from '@/lib/auth/roles';
+// FORK-PATCH(P-010): plan notice — docs/PLANS.md
+import { PlanFeatureNotice } from '@/billing/plan-ui';
 
 type Tab = 'playground' | 'setup' | 'usage';
 
@@ -70,11 +72,15 @@ export default function AgentsPage() {
             )}
           </TabsList>
 
-          <TabsContent value="playground" className="mt-4">
+          <TabsContent value="playground" className="mt-4 space-y-4">
+            {/* FORK-PATCH(P-010) */}
+            <PlanFeatureNotice feature="ai_enabled" />
             <AiPlayground onGoToSetup={() => setTab('setup')} />
           </TabsContent>
 
-          <TabsContent value="setup" className="mt-4">
+          <TabsContent value="setup" className="mt-4 space-y-4">
+            {/* FORK-PATCH(P-010) */}
+            <PlanFeatureNotice feature="ai_enabled" />
             <AiConfig />
           </TabsContent>
 

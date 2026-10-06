@@ -26,6 +26,9 @@ import { getT } from '@/lib/i18n/translate'
 // FORK-PATCH(P-008): secrets server-only + connection log — docs/WHATSAPP_SAAS.md
 import { getWhatsAppConfigRow, whatsappConfigAdmin } from '@/custom/whatsapp/config-store'
 import { logConnectionEvent } from '@/custom/whatsapp/connection'
+// FORK-PATCH(P-010): plan limits — docs/PLANS.md
+import { assertWithinLimit } from '@/billing/entitlements'
+import { toErrorResponse } from '@/lib/auth/account'
 const tFork = getT('Custom.whatsapp.api')
 
 const t = getT('Api')

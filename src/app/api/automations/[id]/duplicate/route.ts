@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-010): plan limits — docs/PLANS.md
+import { assertWithinLimit } from '@/billing/entitlements'
 
 const t = getT('Api')
 

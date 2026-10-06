@@ -35,6 +35,8 @@ import {
 import { getT } from "@/lib/i18n/translate";
 // FORK-PATCH(P-003): canonical URL from brand config — docs/BRANDING.md
 import { brand } from "@/custom/brand/config";
+// FORK-PATCH(P-010): plan limits — docs/PLANS.md
+import { assertWithinLimit } from "@/billing/entitlements";
 
 const t = getT("Api");
 
@@ -222,6 +224,9 @@ export async function POST(request: Request) {
       }
       label = trimmed === "" ? null : trimmed;
     }
+
+    // FORK-PATCH(P-010): members + pending invitations count against max_users.
+    await assertWithinLimit(ctx.accountId, "max_users");
 
     const { token, hash } = generateInviteToken();
 

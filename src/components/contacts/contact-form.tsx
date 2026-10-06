@@ -30,6 +30,8 @@ import { useTranslations } from 'next-intl';
 import { useBrazilianProfile } from '@/modules/br/use-br-profile';
 import { BrazilianProfileFields, PhoneInputHint, usePhoneErrorMessage } from '@/modules/br/contact-fields';
 import { normalizePhoneInput, phoneForStorage } from '@/modules/br/phone';
+// FORK-PATCH(P-010): plan limits — docs/PLANS.md
+import { usePlanLimitMessage } from '@/billing/use-entitlements';
 
 interface ContactFormProps {
   open: boolean;
@@ -51,6 +53,7 @@ export function ContactForm({
   onViewExisting,
 }: ContactFormProps) {
   const t = useTranslations('Contacts.form');
+  const planLimitMessage = usePlanLimitMessage(); // FORK-PATCH(P-010)
   const supabase = createClient();
   const { accountId } = useAuth();
   const isEdit = !!contact;
@@ -243,7 +246,7 @@ export function ContactForm({
         return;
       }
       const message = err instanceof Error ? err.message : t('toastError');
-      toast.error(message);
+      toast.error(planLimitMessage(err) ?? message); // FORK-PATCH(P-010)
     } finally {
       setSaving(false);
     }

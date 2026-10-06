@@ -9,6 +9,8 @@ import {
   validateTriggerForActivation,
 } from '@/lib/automations/validate'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-010): plan limits — docs/PLANS.md
+import { assertWithinLimit } from '@/billing/entitlements'
 
 const t = getT('Api')
 

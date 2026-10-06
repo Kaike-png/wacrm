@@ -40,6 +40,8 @@ import {
 import { useTranslations } from 'next-intl';
 // FORK-PATCH(P-004): decode Excel pt-BR CSVs (Windows-1252) — docs/LOCALIZATION.md
 import { readCsvFile } from '@/custom/locale/csv';
+// FORK-PATCH(P-010): plan limits — docs/PLANS.md
+import { usePlanLimitMessage } from '@/billing/use-entitlements';
 
 const DEFAULT_TAG_COLOR = '#3b82f6';
 const PREVIEW_LIMIT = 5;
@@ -129,6 +131,7 @@ export function ImportModal({
   onImported,
 }: ImportModalProps) {
   const t = useTranslations('Contacts.importModal');
+  const planLimitMessage = usePlanLimitMessage(); // FORK-PATCH(P-010)
   const supabase = createClient();
   const { accountId, canEditSettings } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -281,9 +284,16 @@ export function ImportModal({
       //    unique index is the backstop: a 23505 (race, or a format
       //    that normalizes equal) counts as skipped, not failed.
       const chunkSize = 50;
+      // FORK-PATCH(P-010): once the plan's contact limit is hit, stop
+      // inserting and report it once (the rows before it are kept).
+      let limitMessage: string | null = null;
 
       for (let i = 0; i < toInsert.length; i += chunkSize) {
         const chunk = toInsert.slice(i, i + chunkSize);
+        if (limitMessage) {
+          failed += chunk.length;
+          continue;
+        }
         const rows = chunk.map((row) => ({
           user_id: user.id,
           account_id: accountId,
@@ -320,6 +330,11 @@ export function ImportModal({
               }
             } else if (isUniqueViolation(singleErr)) {
               skipped++;
+            } else if (planLimitMessage(singleErr)) {
+              // FORK-PATCH(P-010)
+              limitMessage = planLimitMessage(singleErr);
+              failed += rows.length - j;
+              break;
             } else {
               failed++;
               // Keep the actual DB error instead of discarding it —
@@ -397,7 +412,9 @@ export function ImportModal({
       if (invalidPhone > 0) {
         toast.warning(t('toastInvalidPhone', { count: invalidPhone }));
       }
-      if (failed > 0) {
+      if (limitMessage) {
+        toast.error(limitMessage); // FORK-PATCH(P-010)
+      } else if (failed > 0) {
         toast.error(t('toastFailed', { count: failed }));
       }
     } catch (err: unknown) {

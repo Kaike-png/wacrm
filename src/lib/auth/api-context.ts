@@ -35,6 +35,8 @@ import { hashApiKey, looksLikeApiKey } from '@/lib/api-keys/keys';
 import { hasScope, type ApiScope } from '@/lib/api-keys/scopes';
 import { forbidden, rateLimited, unauthorized } from '@/lib/api/v1/respond';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+// FORK-PATCH(P-010): plan features — docs/PLANS.md
+import { isFeatureEnabled } from '@/billing/entitlements'
 
 export interface ApiKeyContext {
   /** Discriminant — lets shared logic tell key auth from cookie auth. */
@@ -99,6 +101,12 @@ export async function requireApiKey(
   const limit = checkRateLimit(`apikey:${row.id}`, RATE_LIMITS.publicApi);
   if (!limit.success) {
     throw rateLimited(limit);
+  }
+
+
+  // FORK-PATCH(P-010): the public API is a plan feature (api_enabled)
+  if (!(await isFeatureEnabled(row.account_id, 'api_enabled'))) {
+    throw forbidden('The public API is not included in this organization\'s plan')
   }
 
   if (scope && !hasScope(row.scopes, scope)) {

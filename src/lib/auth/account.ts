@@ -31,6 +31,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { hasMinRole, isAccountRole, type AccountRole } from "./roles";
 import { getT } from "@/lib/i18n/translate";
+// FORK-PATCH(P-010): plan limits — docs/PLANS.md
+import { isPlanLimitError, planLimitBody } from "@/billing/errors";
 
 const t = getT("LibErrors.auth");
 
@@ -70,6 +72,10 @@ export class ForbiddenError extends Error {
  * server internals out of the wire.
  */
 export function toErrorResponse(err: unknown): NextResponse {
+  // FORK-PATCH(P-010): plan limits (PlanLimitError or DB SQLSTATE 53400) → 403.
+  if (isPlanLimitError(err)) {
+    return NextResponse.json(planLimitBody(err, getT("Custom.billing")), { status: 403 });
+  }
   if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
     return NextResponse.json({ error: err.message }, { status: err.status });
   }

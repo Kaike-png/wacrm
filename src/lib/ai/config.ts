@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import type { AiConfig } from './types'
+// FORK-PATCH(P-010): plan features — docs/PLANS.md
+import { isFeatureEnabled } from '@/billing/entitlements'
 
 interface AiConfigRow {
   provider: 'openai' | 'anthropic'
@@ -34,6 +36,8 @@ export async function loadAiConfig(
   opts: { requireActive?: boolean } = {},
 ): Promise<AiConfig | null> {
   const { requireActive = true } = opts
+  // FORK-PATCH(P-010): AI is a plan feature — off reads as "not configured".
+  if (!(await isFeatureEnabled(accountId, 'ai_enabled'))) return null
   const { data, error } = await db
     .from('ai_configs')
     .select(CONFIG_COLUMNS)
@@ -97,6 +101,8 @@ export async function loadEmbeddingsKey(
   db: SupabaseClient,
   accountId: string,
 ): Promise<{ key: string | null; corrupt: boolean }> {
+  // FORK-PATCH(P-010): no AI in the plan → lexical-only knowledge base.
+  if (!(await isFeatureEnabled(accountId, 'ai_enabled'))) return { key: null, corrupt: false }
   const { data, error } = await db
     .from('ai_configs')
     .select('embeddings_api_key')

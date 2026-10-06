@@ -32,6 +32,8 @@ import {
   RATE_LIMITS,
 } from '@/lib/rate-limit';
 import { getT } from '@/lib/i18n/translate';
+// FORK-PATCH(P-010): plan features — docs/PLANS.md
+import { assertFeatureEnabled } from '@/billing/entitlements';
 
 const t = getT('Api');
 

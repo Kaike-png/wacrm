@@ -30,6 +30,8 @@ import {
   resolveSection,
   type SettingsSection,
 } from '@/components/settings/settings-sections';
+// FORK-PATCH(P-010): plan notices — docs/PLANS.md
+import { PlanFeatureNotice, PlanLimitNotice } from '@/billing/plan-ui';
 
 // `useSearchParams` opts this page out of static prerendering unless it
 // sits under a Suspense boundary. Without one, the production build hits
@@ -93,9 +95,27 @@ function SettingsPageInner() {
     templates: <TemplateManager />,
     'quick-replies': <QuickRepliesManager />,
     fields: <FieldsAndTagsPanel />,
-    deals: <DealsSettings />,
-    members: <MembersTab />,
-    api: <ApiKeysSettings />,
+    deals: (
+      <>
+        <DealsSettings />
+        {/* FORK-PATCH(P-004) */}
+        <RegionalSettings />
+      </>
+    ),
+    members: (
+      <div className="space-y-6">
+        {/* FORK-PATCH(P-010) */}
+        <PlanLimitNotice feature="max_users" />
+        <MembersTab />
+      </div>
+    ),
+    api: (
+      <div className="space-y-6">
+        {/* FORK-PATCH(P-010) */}
+        <PlanFeatureNotice feature="api_enabled" />
+        <ApiKeysSettings />
+      </div>
+    ),
   };
 
   return (
