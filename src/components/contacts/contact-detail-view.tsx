@@ -44,7 +44,10 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { contactHandle } from '@/lib/whatsapp/wa-identity';
-import { parseInternationalPhone } from '@/lib/whatsapp/phone-utils';
+// FORK-PATCH(P-005): Brazilian phone/CPF/CNPJ/address — docs/BRAZILIAN_CONTACTS.md
+import { useBrazilianProfile } from '@/modules/br/use-br-profile';
+import { BrazilianProfileFields, BrazilianTaxIdBadge, PhoneInputHint, usePhoneErrorMessage } from '@/modules/br/contact-fields';
+import { normalizePhoneInput, phoneForStorage } from '@/modules/br/phone';
 
 interface ContactDetailViewProps {
   open: boolean;
@@ -79,6 +82,9 @@ export function ContactDetailView({
   const [editEmail, setEditEmail] = useState('');
   const [editCompany, setEditCompany] = useState('');
   const [savingDetails, setSavingDetails] = useState(false);
+  // FORK-PATCH(P-005)
+  const br = useBrazilianProfile({ contactId, enabled: open });
+  const phoneError = usePhoneErrorMessage();
 
   // Tags tab
   const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -212,25 +218,31 @@ export function ContactDetailView({
     // digits-only form the inbound webhook stores — are left alone so a
     // name/email edit is never blocked by the phone field.
     const phoneChanged = editPhone.trim() !== (contact?.phone ?? '');
-    if (phoneChanged && !parseInternationalPhone(editPhone)) {
-      toast.error(t('toastPhoneNeedsCountryCode'));
+    // FORK-PATCH(P-005): "(21) 99999-9999" accepted for BR accounts, stored as E.164.
+    if (phoneChanged && !normalizePhoneInput(editPhone).ok) {
+      toast.error(phoneError(editPhone) ?? t('toastPhoneNeedsCountryCode'));
       return;
     }
+    if (!br.validate()) return;
 
     setSavingDetails(true);
     const { error } = await supabase
       .from('contacts')
       .update({
         name: editName.trim() || null,
-        phone: editPhone.trim(),
+        phone: phoneChanged ? phoneForStorage(editPhone) : editPhone.trim(), // FORK-PATCH(P-005)
         email: editEmail.trim() || null,
         company: editCompany.trim() || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', contactId);
 
+    // FORK-PATCH(P-005): registration data (br_contact_profiles).
+    const brSaved = !error && (await br.save(contactId));
     if (error) {
       toast.error(t('toastUpdateFailed'));
+    } else if (!brSaved) {
+      toast.error(br.saveFailedMessage);
     } else {
       toast.success(t('toastUpdated'));
       fetchContact();
@@ -443,6 +455,8 @@ export function ContactDetailView({
                         {contact.company}
                       </span>
                     )}
+                    {/* FORK-PATCH(P-005): masked CPF/CNPJ */}
+                    <BrazilianTaxIdBadge profile={br} />
                   </div>
                 </div>
               </div>
@@ -518,6 +532,10 @@ export function ContactDetailView({
                       onChange={(e) => setEditPhone(e.target.value)}
                       className="bg-muted border-border text-foreground h-8 text-sm"
                     />
+                    {/* FORK-PATCH(P-005) */}
+                    {editPhone.trim() !== (contact?.phone ?? '') && (
+                      <PhoneInputHint value={editPhone} fallback="" />
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-muted-foreground text-xs">{t('email')}</Label>
@@ -528,13 +546,15 @@ export function ContactDetailView({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-muted-foreground text-xs">{t('company')}</Label>
+                    <Label className="text-muted-foreground text-xs">{br.companyLabel ?? t('company') /* FORK-PATCH(P-005) */}</Label>
                     <Input
                       value={editCompany}
                       onChange={(e) => setEditCompany(e.target.value)}
                       className="bg-muted border-border text-foreground h-8 text-sm"
                     />
                   </div>
+                  {/* FORK-PATCH(P-005) */}
+                  <BrazilianProfileFields profile={br} idPrefix="cd-br" />
                   <Button
                     onClick={saveDetails}
                     disabled={savingDetails}

@@ -5,6 +5,8 @@
 
 // FORK-PATCH(P-004): `;`-separated / Portuguese-header CSVs — docs/LOCALIZATION.md
 import { normalizeCsvText } from '@/custom/locale/csv';
+// FORK-PATCH(P-005): "(21) 99999-9999" → +5521999999999 for BR accounts — docs/BRAZILIAN_CONTACTS.md
+import { normalizePhoneOrKeep } from '@/modules/br/phone';
 
 export interface ParsedContactRow {
   phone: string;
@@ -93,7 +95,7 @@ export function parseContactCsv(text: string): ParseContactCsvResult {
     // it there means the import result can tell the user "N contacts
     // had no phone" instead of the row just vanishing with the total
     // row count silently short of what's actually in the file.
-    const phone = values[phoneIdx]?.replace(/["']/g, '').trim() ?? '';
+    const phone = normalizePhoneOrKeep(values[phoneIdx]?.replace(/["']/g, '').trim() ?? ''); // FORK-PATCH(P-005)
 
     rows.push({
       phone,

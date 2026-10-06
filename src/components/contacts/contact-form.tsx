@@ -12,7 +12,6 @@ import {
   isUniqueViolation,
   type ExistingContact,
 } from '@/lib/contacts/dedupe';
-import { parseInternationalPhone } from '@/lib/whatsapp/phone-utils';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +26,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+// FORK-PATCH(P-005): Brazilian phone/CPF/CNPJ/address — docs/BRAZILIAN_CONTACTS.md
+import { useBrazilianProfile } from '@/modules/br/use-br-profile';
+import { BrazilianProfileFields, PhoneInputHint, usePhoneErrorMessage } from '@/modules/br/contact-fields';
+import { normalizePhoneInput, phoneForStorage } from '@/modules/br/phone';
 
 interface ContactFormProps {
   open: boolean;
@@ -67,6 +70,10 @@ export function ContactForm({
   >(null);
   const [checkingDup, setCheckingDup] = useState(false);
 
+  // FORK-PATCH(P-005)
+  const br = useBrazilianProfile({ contactId: contact?.id, enabled: open });
+  const phoneError = usePhoneErrorMessage();
+
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
@@ -87,7 +94,7 @@ export function ContactForm({
   // Runs on blur so we don't query on every keystroke.
   async function checkDuplicate() {
     if (isEdit || !accountId) return;
-    const value = phone.trim();
+    const value = phoneForStorage(phone); // FORK-PATCH(P-005): "(21) 9…" → +5521…
     if (!value) {
       setDupMatch(null);
       return;
@@ -138,10 +145,14 @@ export function ContactForm({
     // webhook store Meta's digits-only form, and editing their name must
     // not be blocked by a phone the user never touched.
     const phoneChanged = !isEdit || phone.trim() !== (contact?.phone ?? '');
-    if (phoneChanged && !parseInternationalPhone(phone)) {
-      toast.error(t('phoneNeedsCountryCode'));
+    // FORK-PATCH(P-005): Brazilian national input ("(21) 99999-9999") is
+    // accepted for BR accounts and stored as E.164; `+` numbers as before.
+    if (phoneChanged && !normalizePhoneInput(phone).ok) {
+      toast.error(phoneError(phone) ?? t('phoneNeedsCountryCode'));
       return;
     }
+    const phoneValue = phoneChanged ? phoneForStorage(phone) : phone.trim();
+    if (!br.validate()) return;
 
     // Hard-block an exact duplicate on create (the DB unique index is
     // the real backstop; this avoids a round-trip + a raw error toast).
@@ -167,7 +178,7 @@ export function ContactForm({
           .from('contacts')
           .update({
             name: name.trim() || null,
-            phone: phone.trim(),
+            phone: phoneValue, // FORK-PATCH(P-005)
             email: email.trim() || null,
             company: company.trim() || null,
             updated_at: new Date().toISOString(),
@@ -181,7 +192,7 @@ export function ContactForm({
             user_id: user.id,
             account_id: accountId,
             name: name.trim() || null,
-            phone: phone.trim(),
+            phone: phoneValue, // FORK-PATCH(P-005)
             email: email.trim() || null,
             company: company.trim() || null,
           })
@@ -189,6 +200,11 @@ export function ContactForm({
           .single();
         if (error) throw error;
         contactId = data.id;
+      }
+
+      // FORK-PATCH(P-005): registration data (br_contact_profiles).
+      if (contactId && !(await br.save(contactId))) {
+        toast.error(br.saveFailedMessage);
       }
 
       // Sync tags
@@ -220,7 +236,7 @@ export function ContactForm({
           const existing = await findExistingContact(
             supabase,
             accountId,
-            phone.trim(),
+            phoneForStorage(phone), // FORK-PATCH(P-005)
           );
           if (existing) setDupMatch({ contact: existing, exact: true });
         }
@@ -235,7 +251,7 @@ export function ContactForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-popover border-border text-popover-foreground sm:max-w-md">
+      <DialogContent className="bg-popover border-border text-popover-foreground sm:max-w-md max-h-[90vh] overflow-y-auto" /* FORK-PATCH(P-005): room for the address */>
         <DialogHeader>
           <DialogTitle className="text-popover-foreground">
             {isEdit ? t('editTitle') : t('addTitle')}
@@ -303,9 +319,8 @@ export function ContactForm({
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">
-                {t('phoneHint')}
-              </p>
+              // FORK-PATCH(P-005): shows the stored form for Brazilian input
+              <PhoneInputHint value={phone} fallback={t('phoneHint')} />
             )}
           </div>
 
@@ -325,7 +340,7 @@ export function ContactForm({
 
           <div className="space-y-2">
             <Label htmlFor="cf-company" className="text-muted-foreground">
-              {t('companyLabel')}
+              {br.companyLabel ?? t('companyLabel') /* FORK-PATCH(P-005): "Nome fantasia" for PJ */}
             </Label>
             <Input
               id="cf-company"
@@ -335,6 +350,9 @@ export function ContactForm({
               className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
+
+          {/* FORK-PATCH(P-005) */}
+          <BrazilianProfileFields profile={br} idPrefix="cf-br" collapsible />
 
           <div className="space-y-2">
             <Label className="text-muted-foreground">{t('tagsLabel')}</Label>

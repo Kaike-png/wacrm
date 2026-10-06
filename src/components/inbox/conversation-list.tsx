@@ -22,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+// FORK-PATCH(P-005): Brazilian display mask — docs/BRAZILIAN_CONTACTS.md
+import { formatPhoneDisplay } from "@/modules/br/phone";
 
 interface ConversationListProps {
   activeConversationId: string | null;
@@ -438,7 +440,7 @@ function ConversationItem({
   t,
 }: ConversationItemProps) {
   const contact = conversation.contact;
-  const displayName = contact?.name || contact?.phone || t("unknown");
+  const displayName = contact?.name || formatPhoneDisplay(contact?.phone) || t("unknown"); // FORK-PATCH(P-005)
   const initials = displayName.charAt(0).toUpperCase();
 
   const handleClick = useCallback(() => {

@@ -59,6 +59,8 @@ import { CustomFieldsManager } from '@/components/contacts/custom-fields-manager
 import { useCan } from '@/hooks/use-can';
 import { GatedButton } from '@/components/ui/gated-button';
 import { useTranslations } from 'next-intl';
+// FORK-PATCH(P-005): Brazilian display mask — docs/BRAZILIAN_CONTACTS.md
+import { formatPhoneDisplay } from '@/modules/br/phone';
 
 const PAGE_SIZE = 25;
 
@@ -607,7 +609,7 @@ export default function ContactsPage() {
                     {contact.name || <span className="text-muted-foreground italic">{t('unnamed')}</span>}
                   </TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs">
-                    {contact.phone}
+                    {formatPhoneDisplay(contact.phone) /* FORK-PATCH(P-005) */}
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
                     {contact.email || <span className="text-muted-foreground">-</span>}
@@ -641,11 +643,7 @@ export default function ContactsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs hidden lg:table-cell">
-                    {new Date(contact.created_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
+                    {formatDate(contact.created_at, 'medium')}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

@@ -32,6 +32,8 @@ import {
   normalizePhone,
   sanitizePhoneForMeta,
 } from './phone-utils'
+// FORK-PATCH(P-005): Brazilian display mask — docs/BRAZILIAN_CONTACTS.md
+import { formatPhoneDisplay } from '@/modules/br/phone'
 
 /** The `contacts[]` entry Meta pairs with an inbound message. */
 export interface WaContactPayload {
@@ -157,7 +159,7 @@ export function contactHandle(contact: {
   wa_username?: string | null
   wa_user_id?: string | null
 }): string {
-  if (contact.phone?.trim()) return contact.phone
+  if (contact.phone?.trim()) return formatPhoneDisplay(contact.phone) // FORK-PATCH(P-005): +55 (21) 99999-9999
   if (contact.wa_username?.trim()) return `@${contact.wa_username.trim()}`
   return contact.wa_user_id?.trim() ?? ''
 }
