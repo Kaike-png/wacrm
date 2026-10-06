@@ -11,6 +11,8 @@ import { PresenceHeartbeat } from "@/components/presence/presence-heartbeat";
 import { BrowserNotificationsListener } from "@/components/notifications/browser-notifications-listener";
 // FORK-PATCH(P-004): tenant locale / time zone for every formatter — docs/LOCALIZATION.md
 import { TenantLocaleProvider } from "@/custom/locale/tenant-locale";
+// FORK-PATCH(P-007): first-run wizard redirect — docs/ONBOARDING.md
+import { OnboardingGate } from "@/modules/onboarding/progress";
 
 // Auth-gated dashboard shell. Extracted from the layout so the layout
 // itself can stay a server component and export metadata (noindex) —
@@ -50,6 +52,8 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       {/* Reports this tab's online/away presence once we know a user is
           signed in. Headless — renders nothing. */}
       <PresenceHeartbeat />
+      {/* FORK-PATCH(P-007): owner of a new organization → /onboarding */}
+      <OnboardingGate />
       {/* Desktop alerts for new customer messages (opt-in via Settings →
           Your profile). Headless — renders nothing. */}
       <BrowserNotificationsListener />
