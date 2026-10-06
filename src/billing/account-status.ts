@@ -38,20 +38,35 @@ export function needsAttention(status: AccountStatus): boolean {
 }
 
 /**
- * Allowed lifecycle transitions, for billing code and operator tools.
- * The database accepts any of the five values from the service role;
- * this is the business rule on top.
+ * Allowed lifecycle transitions — the organization state machine.
+ * Enforced by the database for every writer (trigger
+ * accounts_guard_status_transition, migration 912, same matrix in
+ * account_status_transition_allowed; account-status.test.ts keeps both
+ * equal). Who moves the status:
+ *
+ *   trial → active             first payment (billing)
+ *   active → past_due          renewal overdue (billing)
+ *   past_due → active          payment (billing)
+ *   past_due → suspended       grace period over (billing cron)
+ *   trial|active|past_due → suspended   team (platform panel)
+ *   suspended → active         payment (billing suspension only) or team
+ *   suspended → trial|past_due team reactivation restores the previous status
+ *   cancelled → active         team
+ *   * → cancelled              reserved (no automatic path yet)
  */
-const TRANSITIONS: Record<AccountStatus, readonly AccountStatus[]> = {
+export const ACCOUNT_STATUS_TRANSITIONS: Record<
+  AccountStatus,
+  readonly AccountStatus[]
+> = {
   trial: ['active', 'past_due', 'suspended', 'cancelled'],
   active: ['past_due', 'suspended', 'cancelled'],
   past_due: ['active', 'suspended', 'cancelled'],
-  suspended: ['active', 'cancelled'],
+  suspended: ['active', 'trial', 'past_due', 'cancelled'],
   cancelled: ['active'],
 };
 
 export function canTransition(from: AccountStatus, to: AccountStatus): boolean {
-  return from !== to && TRANSITIONS[from].includes(to);
+  return from !== to && ACCOUNT_STATUS_TRANSITIONS[from].includes(to);
 }
 
 /** Days left in the trial (ceil), or null when not in trial / no end date. */

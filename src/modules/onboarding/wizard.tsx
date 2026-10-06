@@ -107,8 +107,14 @@ export function OnboardingWizard() {
   const t = useTranslations('Custom.onboarding');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { accountId, user, canEditSettings, profileLoading, refreshProfile } =
-    useAuth();
+  const {
+    accountId,
+    accountStatus,
+    user,
+    canEditSettings,
+    profileLoading,
+    refreshProfile,
+  } = useAuth();
   const { refresh: refreshLocale } = useLocaleSettings();
 
   const [data, setData] = useState<WizardData | null>(null);
@@ -173,6 +179,13 @@ export function OnboardingWizard() {
       ).reduce((p, s) => skipStep({ ...p, current_step: s }, s), data.progress);
       const done = finish({ ...remaining, current_step: 'done' });
       await saveOnboardingProgress(data.accountId, user?.id ?? null, done);
+      if (!done.completed_at && done.current_step !== 'done') {
+        // A required step is still missing: go there instead of leaving.
+        setFinishing(false);
+        setData((d) => (d ? { ...d, progress: done } : d));
+        setScreen(done.current_step);
+        return;
+      }
       router.push(to);
     },
     [data, user?.id, router]
@@ -182,6 +195,22 @@ export function OnboardingWizard() {
     () => (data ? progressPercent(data.progress) : 0),
     [data]
   );
+
+  // Signed in without an organization (signup trigger failed, membership
+  // removed): say so instead of spinning forever.
+  if (
+    !profileLoading &&
+    !accountId &&
+    (accountStatus === 'unlinked' || accountStatus === 'error')
+  ) {
+    return (
+      <Shell>
+        <div className="border-border bg-card space-y-4 rounded-xl border p-6">
+          <p className="text-muted-foreground text-sm">{t('unlinked')}</p>
+        </div>
+      </Shell>
+    );
+  }
 
   if (profileLoading || !accountId || !data) {
     return (

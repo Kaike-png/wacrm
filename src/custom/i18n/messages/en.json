@@ -87,6 +87,7 @@
       "skippedTag": "later",
       "skipAll": "Skip and go to the dashboard",
       "adminOnly": "The initial setup is done by whoever manages the organization. Ask an admin to finish it, or continue to the dashboard.",
+      "unlinked": "Your user is not linked to any organization yet, so the setup cannot continue. Sign out and in again; if it persists, contact support.",
       "nav": {
         "back": "Back",
         "skip": "Do it later",

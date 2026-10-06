@@ -11,7 +11,7 @@
 const REDACTED = '[redacted]';
 
 const SECRET_KEY =
-  /^(access_?token|verify_?token|hub\.verify_token|token|pin|password|secret|app_?secret|client_?secret|api_?key|authorization|encryption_?key|service_?role_?key|key_hash)$/i;
+  /(^|_|[a-z])(access_?token|verify_?token|hub\.verify_token|token|pin|password|secret|app_?secret|client_?secret|api_?key|authorization|encryption_?key|service_?role_?key|key_hash)$/i;
 
 const PATTERNS: [RegExp, string | ((...m: string[]) => string)][] = [
   // Meta user / system-user / page tokens.
@@ -45,6 +45,33 @@ const PATTERNS: [RegExp, string | ((...m: string[]) => string)][] = [
   [/("?asaas-access-token"?\s*[:=]\s*"?)[^"\s,}]+/gi, `$1${REDACTED}`],
 ];
 
+/**
+ * Personal data that has no place in server logs (LGPD): CPF/CNPJ, e-mail,
+ * phone numbers. Masked keeping the last 2 characters so a support person
+ * can still correlate. Applied to console output only (never to stored
+ * messages or API payloads).
+ */
+const PERSONAL_PATTERNS: RegExp[] = [
+  // e-mail
+  /\b[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+  // CNPJ (also alphanumeric, formatted)
+  /\b[0-9A-Z]{2}\.[0-9A-Z]{3}\.[0-9A-Z]{3}\/[0-9A-Z]{4}-\d{2}\b/g,
+  // CPF formatted
+  /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,
+  // E.164 phones (+55 11 98765-4321, +5511987654321)
+  /\+\d{2}[\s-]?\(?\d{2}\)?[\s-]?\d{4,5}[\s-]?\d{4}\b/g,
+  // 11 bare digits: CPF or a Brazilian mobile without country code
+  /(?<![\w.])\d{11}(?![\w.])/g,
+];
+
+export function maskPersonalData(text: string): string {
+  let out = text;
+  for (const pattern of PERSONAL_PATTERNS) {
+    out = out.replace(pattern, (m) => `•••${m.slice(-2)}`);
+  }
+  return out;
+}
+
 /** Redact secrets inside free text. */
 export function redactSecrets(text: string): string {
   let out = text;
@@ -59,26 +86,38 @@ export function redactSecrets(text: string): string {
  * (message + stack + cause), plain objects/arrays (secret-named keys are
  * dropped entirely). Non-plain objects (Response, Buffer…) pass through.
  */
-export function redactValue(value: unknown, depth = 0): unknown {
-  if (typeof value === 'string') return redactSecrets(value);
+export function redactValue(
+  value: unknown,
+  depth = 0,
+  personal = false
+): unknown {
+  if (typeof value === 'string')
+    return personal
+      ? maskPersonalData(redactSecrets(value))
+      : redactSecrets(value);
   if (value === null || typeof value !== 'object' || depth > 5) return value;
   if (value instanceof Error) {
-    const copy = new Error(redactSecrets(value.message));
+    const clean = (t: string) =>
+      personal ? maskPersonalData(redactSecrets(t)) : redactSecrets(t);
+    const copy = new Error(clean(value.message));
     copy.name = value.name;
-    if (value.stack) copy.stack = redactSecrets(value.stack);
+    if (value.stack) copy.stack = clean(value.stack);
     for (const [k, v] of Object.entries(value)) {
       (copy as unknown as Record<string, unknown>)[k] = SECRET_KEY.test(k)
         ? REDACTED
-        : redactValue(v, depth + 1);
+        : redactValue(v, depth + 1, personal);
     }
     return copy;
   }
-  if (Array.isArray(value)) return value.map((v) => redactValue(v, depth + 1));
+  if (Array.isArray(value))
+    return value.map((v) => redactValue(v, depth + 1, personal));
   const proto = Object.getPrototypeOf(value);
   if (proto !== Object.prototype && proto !== null) return value;
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value)) {
-    out[k] = SECRET_KEY.test(k) ? REDACTED : redactValue(v, depth + 1);
+    out[k] = SECRET_KEY.test(k)
+      ? REDACTED
+      : redactValue(v, depth + 1, personal);
   }
   return out;
 }
@@ -116,7 +155,7 @@ export function installConsoleRedaction(target: Console = console): void {
   for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
     const original = target[method].bind(target);
     target[method] = (...args: unknown[]) =>
-      original(...args.map((a) => redactValue(a)));
+      original(...args.map((a) => redactValue(a, 0, true)));
   }
   if (target === console) installed = true;
 }

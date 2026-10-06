@@ -12,6 +12,7 @@ import { BillingService } from '@/billing/payments/service';
 import type { PaymentStatus } from '@/billing/payments/types';
 import { getBillingProvider } from '@/billing/providers';
 import {
+  mockAllowed,
   MockBillingProvider,
   MOCK_PROVIDER_ID,
 } from '@/billing/providers/mock';
@@ -25,13 +26,6 @@ const STATUSES: PaymentStatus[] = [
   'canceled',
   'failed',
 ];
-
-function mockAllowed(): boolean {
-  return (
-    process.env.NODE_ENV !== 'production' ||
-    process.env.BILLING_ALLOW_MOCK === 'true'
-  );
-}
 
 export async function POST(
   request: Request,

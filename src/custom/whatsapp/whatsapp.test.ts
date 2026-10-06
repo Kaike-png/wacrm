@@ -252,3 +252,49 @@ describe('secrets stay on the server', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe('log redaction of personal data (audit, LGPD)', () => {
+  it('masks CPF, CNPJ, e-mail and phones in console output only', async () => {
+    const { maskPersonalData, installConsoleRedaction, redactValue } =
+      await import('./redact');
+    expect(maskPersonalData('cpf 123.456.789-09 ok')).toBe('cpf •••09 ok');
+    expect(maskPersonalData('cnpj 12.345.678/0001-95')).toBe('cnpj •••95');
+    expect(maskPersonalData('ana.souza@empresa.com.br falhou')).toBe(
+      '•••br falhou'
+    );
+    expect(maskPersonalData('tel +55 11 98765-4321')).toBe('tel •••21');
+    expect(maskPersonalData('tel +5511987654321')).toBe('tel •••21');
+    expect(maskPersonalData('cpf 12345678909')).toBe('cpf •••09');
+    // ids stay readable: phone_number_id (15 digits), uuids, wamids
+    expect(maskPersonalData('phone 106540352242922')).toBe(
+      'phone 106540352242922'
+    );
+    expect(maskPersonalData('acc 0b8f3c1e-1111-4000-8000-000000000001')).toBe(
+      'acc 0b8f3c1e-1111-4000-8000-000000000001'
+    );
+    // not applied to non-console redaction (stored messages / API errors)
+    expect(redactValue('x 123.456.789-09')).toBe('x 123.456.789-09');
+    // camelCase / prefixed secret keys are dropped
+    expect(
+      redactValue({ webhookToken: 'abc', asaas_api_key: 'k', name: 'n' })
+    ).toEqual({
+      webhookToken: '[redacted]',
+      asaas_api_key: '[redacted]',
+      name: 'n',
+    });
+
+    const lines: unknown[][] = [];
+    const fake = {
+      log: (...a: unknown[]) => lines.push(a),
+      info: (...a: unknown[]) => lines.push(a),
+      warn: (...a: unknown[]) => lines.push(a),
+      error: (...a: unknown[]) => lines.push(a),
+      debug: (...a: unknown[]) => lines.push(a),
+    } as unknown as Console;
+    installConsoleRedaction(fake);
+    fake.error('Key (phone)=(+5511987654321) already exists', {
+      email: 'joao@x.com.br',
+    });
+    expect(JSON.stringify(lines)).not.toMatch(/987654321|joao@/);
+  });
+});

@@ -65,10 +65,22 @@ const id = (prefix: string) =>
   `${prefix}_mock_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
 const today = () => new Date().toISOString().slice(0, 10);
 
+/**
+ * The mock is a development tool. In production it is refused unless the
+ * deploy opts in (staging: BILLING_ALLOW_MOCK=true) — also for webhooks
+ * addressed to it by name, which bypass the BILLING_PROVIDER check.
+ */
+export function mockAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.NODE_ENV !== 'production' || env.BILLING_ALLOW_MOCK === 'true';
+}
+
 export function mockWebhookSecret(
   env: NodeJS.ProcessEnv = process.env
 ): string {
-  return env.BILLING_MOCK_WEBHOOK_SECRET?.trim() || DEV_SECRET;
+  const configured = env.BILLING_MOCK_WEBHOOK_SECRET?.trim();
+  // The dev default is public (it is in this file): never in production.
+  if (!configured && env.NODE_ENV === 'production') return '';
+  return configured || DEV_SECRET;
 }
 
 export function signMockWebhook(
@@ -233,6 +245,10 @@ export class MockBillingProvider implements BillingProvider {
   }
 
   async parseWebhook(request: WebhookRequest): Promise<BillingEvent[]> {
+    if (!mockAllowed())
+      throw new InvalidWebhookError('mock gateway disabled in production');
+    if (!this.secret)
+      throw new InvalidWebhookError('BILLING_MOCK_WEBHOOK_SECRET is not set');
     const given = request.headers.get(MOCK_SIGNATURE_HEADER) ?? '';
     const expected = signMockWebhook(request.rawBody, this.secret);
     const a = Buffer.from(given);

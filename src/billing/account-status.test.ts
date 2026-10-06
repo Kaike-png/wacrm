@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ACCOUNT_STATUS_TRANSITIONS,
   ACCOUNT_STATUSES,
   canTransition,
   needsAttention,
@@ -46,8 +47,34 @@ describe('account status', () => {
     expect(canTransition('past_due', 'active')).toBe(true);
     expect(canTransition('cancelled', 'active')).toBe(true);
     expect(canTransition('active', 'trial')).toBe(false);
-    expect(canTransition('suspended', 'past_due')).toBe(false);
+    expect(canTransition('past_due', 'trial')).toBe(false);
+    expect(canTransition('cancelled', 'past_due')).toBe(false);
+    expect(canTransition('cancelled', 'trial')).toBe(false);
+    // team reactivation restores the status from before the suspension
+    expect(canTransition('suspended', 'past_due')).toBe(true);
+    expect(canTransition('suspended', 'trial')).toBe(true);
     expect(canTransition('active', 'active')).toBe(false);
+  });
+
+  it('state machine equals the database matrix (migration 912)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const sql = readFileSync(
+      'supabase/migrations/912_foundation_hardening.sql',
+      'utf8'
+    );
+    const body = sql.slice(
+      sql.indexOf('FUNCTION public.account_status_transition_allowed'),
+      sql.indexOf('FUNCTION public.accounts_guard_status_transition')
+    );
+    const parsed: Record<string, string[]> = {};
+    for (const m of body.matchAll(/WHEN '(\w+)'\s+THEN ARRAY\[([^\]]*)\]/g)) {
+      parsed[m[1]] = [...m[2].matchAll(/'(\w+)'/g)].map((x) => x[1]);
+    }
+    expect(parsed).toEqual(
+      Object.fromEntries(
+        ACCOUNT_STATUSES.map((s) => [s, [...ACCOUNT_STATUS_TRANSITIONS[s]]])
+      )
+    );
   });
 
   it('counts trial days left', () => {

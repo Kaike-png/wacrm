@@ -87,6 +87,7 @@
       "skippedTag": "para depois",
       "skipAll": "Pular e ir para o painel",
       "adminOnly": "A configuração inicial é feita por quem administra a organização. Peça a um administrador para concluir ou siga para o painel.",
+      "unlinked": "Seu usuário ainda não está vinculado a nenhuma organização, então a configuração não pode continuar. Saia e entre de novo; se persistir, fale com o suporte.",
       "nav": {
         "back": "Voltar",
         "skip": "Fazer depois",

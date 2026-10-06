@@ -111,10 +111,21 @@ export function skipStep(
   };
 }
 
+/**
+ * Mark onboarding complete — only once every required step is completed
+ * ("Pular tudo" or ?step=done must not complete it early). Otherwise the
+ * progress is returned pointing at the first required step still missing,
+ * with completed_at untouched.
+ */
 export function finish(
   progress: OnboardingProgress,
   now: Date = new Date()
 ): OnboardingProgress {
+  const missing = ONBOARDING_STEPS.find(
+    (s) => !OPTIONAL_STEPS.has(s) && !progress.completed_steps.includes(s)
+  );
+  if (missing && !progress.completed_at)
+    return { ...progress, current_step: missing };
   return {
     ...progress,
     current_step: 'done',

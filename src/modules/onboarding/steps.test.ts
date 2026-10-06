@@ -86,7 +86,10 @@ describe('onboarding steps', () => {
 
 describe('dashboard redirect', () => {
   const pending = { ...NEW_PROGRESS };
-  const completed = finish(NEW_PROGRESS);
+  const completed = finish({
+    ...NEW_PROGRESS,
+    completed_steps: ['organization'],
+  });
 
   it('sends only the owner of an unfinished organization', () => {
     expect(
@@ -127,5 +130,16 @@ describe('dashboard redirect', () => {
         isOwner: true,
       })
     ).toBe(false);
+  });
+});
+
+describe('finish requires the required steps (audit)', () => {
+  it('does not complete onboarding while the organization step is missing', () => {
+    const p = finish({ ...NEW_PROGRESS, current_step: 'done' });
+    expect(p.completed_at).toBeNull();
+    expect(p.current_step).toBe('organization');
+    const ok = finish({ ...NEW_PROGRESS, completed_steps: ['organization'] });
+    expect(ok.completed_at).not.toBeNull();
+    expect(ok.current_step).toBe('done');
   });
 });

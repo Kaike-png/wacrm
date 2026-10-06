@@ -5,8 +5,11 @@
 > (SaaS BR) cresce. A ideia é que cada merge do upstream seja uma operação
 > **previsível e pequena**.
 >
-> Estado em 2026-10-05: o fork está exatamente **1 commit à frente** do
-> upstream (`45e80ad`, 0 commits atrás). É o melhor momento para fixar as regras.
+> Estado em 2026-10-06 (auditoria da fundação, §9): **0 commits atrás** do
+> upstream (`45e80ad`) e 1 commit à frente (`fbabe3f`, P-001), **mais todo o
+> trabalho P-002…P-014 ainda não commitado** (89 arquivos do core alterados,
+> +832/−317). Divergência total do core: 154 arquivos, +4597/−1123 (≈ 2.800
+> linhas são os 4 `messages/*.json` do P-001). Fork: 13 migrations (900–912).
 
 ---
 
@@ -154,8 +157,11 @@ clientes Supabase (`createServerSupabase`, `supabaseAdmin`,
 ### 3.2 Banco de dados (migrations)
 
 - **Nunca editar** migration do upstream (`001`–`0NN`).
-- Migrations do fork: **`supabase/migrations/9NN_<camada>_<nome>.sql`**
-  (`900_custom_*`, `910_billing_*`, `920_br_*`, `930_integrations_*`…).
+- Migrations do fork: **`supabase/migrations/9NN_<nome>.sql`**. A ideia
+  inicial era um prefixo por camada (`900_custom_*`, `910_billing_*`,
+  `920_br_*`…); na prática os arquivos foram numerados em sequência
+  (900–912, camadas misturadas). Mantida a sequência: o que importa é o `9`
+  na frente (ordem core → fork) e a idempotência.
   - O Supabase CLI aplica em ordem de nome de arquivo. Com o prefixo `9`, num
     banco novo o core inteiro é aplicado **antes** do fork, a ordem natural de
     camadas.
@@ -233,19 +239,31 @@ marcador ou import do core para o fork fora de um seam registrado.
 | **P-001** | código + i18n (em massa, sem marcadores) | 104 arquivos do commit `fbabe3f` (lista abaixo) | i18n das strings hardcoded de UI, validadores e API | **propor upstream**: é a maior fonte de conflito hoje |
 | **P-002** | seam | `src/i18n/request.ts` (2 linhas), `src/lib/i18n/translate.ts` (3 trechos) | carregar o catálogo i18n do fork sobre o do core | fork-only |
 | **P-003** | seam + infra | `src/app/layout.tsx`, `src/app/icon.tsx`, `src/components/layout/sidebar.tsx`, `src/app/(auth)/layout.tsx`, `src/app/join/layout.tsx`, `src/app/api/account/invitations/route.ts`, `src/lib/whatsapp/meta-error-explain.ts`, `Dockerfile`, `docker-compose.yml`, `.env.local.example` | identidade do produto via `src/custom/brand/config.ts` ([`BRANDING.md`](./BRANDING.md)) | fork-only (o fallback `https://wacrm.tech` do convite poderia ir upstream) |
-| **P-004** | seam + call sites | loaders i18n, `vitest.config.ts`, `dashboard-shell`, `settings/page`, `lib/automations/engine.ts`, `lib/currency.ts`, `lib/contacts/parse-contact-csv.ts` e ~35 componentes com datas/números/valores (lista em `core-patches.ts`) | PT-BR padrão, locale/fuso/moeda por tenant (migration 900), formatação via `src/custom/locale/format.ts`, entrada `1.500,50`, CSV do Excel pt-BR ([`LOCALIZATION.md`](./LOCALIZATION.md)) | **propor upstream** a parte de bugs (`en-US` fixo, padrões do `date-fns` em inglês, fuso do servidor no `time_of_day`); o padrão pt-BR é fork-only |
+| **P-004** | seam + call sites | loaders i18n, `vitest.config.ts`, `dashboard-shell`, `settings/page`, `lib/automations/engine.ts`, `lib/currency.ts`, `lib/contacts/parse-contact-csv.ts` e ~40 componentes com datas/números/valores (47 arquivos no total, lista em `core-patches.ts`) | PT-BR padrão, locale/fuso/moeda por tenant (migration 900), formatação via `src/custom/locale/format.ts`, entrada `1.500,50`, CSV do Excel pt-BR ([`LOCALIZATION.md`](./LOCALIZATION.md)) | **propor upstream** a parte de bugs (`en-US` fixo, padrões do `date-fns` em inglês, fuso do servidor no `time_of_day`); o padrão pt-BR é fork-only |
 | **P-005** | seam | `contact-form.tsx`, `contact-detail-view.tsx`, `lib/whatsapp/wa-identity.ts` (`contactHandle`), `lib/contacts/parse-contact-csv.ts`, `contacts/page.tsx`, `inbox/conversation-list.tsx` | CPF/CNPJ, razão social e endereço (`br_contact_profiles`, migration 901), telefone brasileiro → E.164, máscara `+55 (21) …` ([`BRAZILIAN_CONTACTS.md`](./BRAZILIAN_CONTACTS.md)) | fork-only |
 | **P-006** | seam | `components/settings/settings-sections.ts`, `settings/page.tsx`, `api/whatsapp/media/[mediaId]/route.ts` | seção “Organização” (organização = `accounts`; status + `br_account_profiles`, migration 902) e `Cache-Control: private` na mídia autenticada; correções de isolamento em SQL na migration 903 ([`TENANCY.md`](./TENANCY.md)) | **propor upstream** a 903 (RPCs expostas, referências entre tenants, storage listável) e o cache; a organização é fork-only |
 | **P-007** | seam | `src/middleware.ts` (`/onboarding` protegido), `dashboard-shell.tsx` (`OnboardingGate`) | assistente de configuração inicial em `/onboarding` (`onboarding_progress`, migration 904) ([`ONBOARDING.md`](./ONBOARDING.md)) | fork-only |
 | **P-008** | seam + call sites | `instrumentation.ts` (novo), `api/whatsapp/{config,config/verify-registration,broadcast,media,react,templates/*,webhook}`, `lib/whatsapp/{broadcast-core,broadcast-resume,send-message}.ts`, `settings/whatsapp-config.tsx`, `inbox/page.tsx`, `settings/page.tsx`, `types/index.ts` | segredos do WhatsApp só no servidor (privilégio por coluna, migration 905), Business ID/PIN, log de conexão, WABA conferida no webhook, card de status, redação de logs ([`WHATSAPP_SAAS.md`](./WHATSAPP_SAAS.md)) | **propor upstream** a exposição de ciphertext e a checagem de WABA |
-| **P-009** | seam + call sites | `middleware.ts` (`/platform`), `(dashboard)/layout.tsx` (aviso de suspensão), `lib/auth/api-context.ts`, `lib/{automations,flows}/meta-send.ts`, `api/whatsapp/webhook` | suspensão efetiva (RLS via `is_account_member` na 906 + caminhos da service role via `src/custom/tenancy`) e painel `/platform` ([`PLATFORM_ADMIN.md`](./PLATFORM_ADMIN.md)) | fork-only |
+| **P-009** | seam | `src/middleware.ts` (`/platform` protegido) | painel `/platform` ([`PLATFORM_ADMIN.md`](./PLATFORM_ADMIN.md)). O bloqueio por RLS da 906 (`is_account_member` olhando status) foi **desfeito pela 911**; os demais arquivos que este patch tocava passaram para P-010/P-014 | fork-only |
 | **P-010** | seam + call sites | `lib/auth/{account,api-context}.ts`, `lib/ai/config.ts`, `lib/api/v1/contacts.ts`, `api/account/{invitations,api-keys}`, `api/automations` (+`duplicate`), `api/whatsapp/config`, `contacts/{contact-form,import-modal}.tsx`, `settings/page.tsx`, `agents/page.tsx` | planos SaaS: limites e recursos lidos por chave do banco via `src/billing/entitlements` (migration 907), 403 padronizado ([`PLANS.md`](./PLANS.md)) | fork-only |
 | **P-011** | seam | `(dashboard)/contacts/page.tsx`, `(dashboard)/automations/page.tsx` | aviso de limite atingido com sugestão de upgrade (`UsageService`, migration 908 — [`USAGE.md`](./USAGE.md)) | fork-only |
 | **P-012** | seam | `.env.local.example` | variáveis `BILLING_*` da abstração de pagamentos (`BillingProvider`, gateway mock, migration 909 — [`BILLING.md`](./BILLING.md)); nenhum código do core alterado | fork-only |
 | **P-013** | seam | `.env.local.example` | variáveis `ASAAS_*` do primeiro gateway real (adaptador em `src/integrations/payments/asaas`, migration 910 — [`ASAAS.md`](./ASAAS.md)); nenhum código do core alterado | fork-only |
 | **P-014** | seam | `meta-api.ts`, `send-message.ts`, `broadcast-core.ts`, `automations/{engine,meta-send}.ts`, `flows/meta-send.ts`, `auth/account.ts`, `api/v1/respond.ts`, rotas `whatsapp/{webhook,broadcast,react,config}`, `automations` (+duplicate), `account/api-keys`, `v1/webhooks`, `(dashboard)/layout.tsx`, `.env.local.example` | política de inadimplência: só chamadas a `assertTenantCan`/`tenantCan`/`assertPhoneCan` e o mapeamento da recusa para 403 ([`DELINQUENCY.md`](./DELINQUENCY.md)); substitui o bloqueio total do P-009, que ficou só no `middleware.ts` | fork-only |
-| — | infra (sem marcador) | `package.json` (`test:db`), `.github/workflows/fork-db-tests.yml` (arquivo novo), `supabase/tests/` | testes pgTAP de isolamento (`npm run test:db`) | n/a |
+| — | infra (sem marcador) | `package.json` (`test:db`, `test:db:race`, `test:flow`; `next`/`eslint-config-next` 16.3.5 → **16.3.8**, correção do GHSA-vcvr-r3jv-pc5j), `.github/workflows/fork-db-tests.yml` (arquivo novo), `supabase/tests/` | testes pgTAP/concorrência/fluxo comercial; patch de segurança do Next | n/a (o upstream deve subir o Next também; no merge, aceitar a versão maior) |
+| — | infra (sem marcador) | `.gitignore` (bloco `# FORK` no fim) | ignora `supabase/.temp/` (o CLI guarda segredos gerados ali), `supabase/.branches/`, `.idea/` | poderia ir upstream |
+| — | teste do fork em pasta do core | `src/lib/whatsapp/meta-api.delinquency.test.ts` (novo) | prova que cada função de envio da Graph API é recusada para tenant suspenso (P-014) | mover para `src/billing/` quando der |
 | — | ferramenta | `AGENTS.md` | reescrito automaticamente pelo `next dev` (o próprio arquivo pede que seja commitado) | n/a |
+
+### Patches de banco (tipo `db`): migrations do fork que alteram objetos do core
+
+| Migration | Objeto do upstream | Risco num merge |
+|---|---|---|
+| 900, 902 | `accounts`: colunas `locale`, `timezone`, …, `status`, `status_changed_at`, `trial_ends_at`; triggers de guarda | colisão de nome de coluna se o upstream criar as mesmas |
+| 903 | `REVOKE EXECUTE` em `record_webhook_failure`, `claim_ai_reply_slot`, `_bcast_bump`, `recompute_broadcast_counts`, `merge_duplicate_*`; remove políticas de storage de 008/016/023; triggers `tenant_enforce_refs` em 16 tabelas; `profiles_guard_client_insert` | um `CREATE OR REPLACE`/`GRANT` futuro do upstream roda **depois** e desfaz o revoke silenciosamente → rodar `npm run test:db` (a suíte de isolamento acusa) |
+| 905 | `whatsapp_config`: 5 colunas, CHECK de status trocado, privilégios por coluna | coluna nova do upstream recebe grant padrão → revisar e incluir no GRANT por coluna |
+| 906 → 911 | `is_account_member` redefinida duas vezes (906 adiciona status, 911 volta ao equivalente da 017) | num banco novo a 9xx roda depois de qualquer reescrita futura do upstream e a sobrescreve. **Pendente**: remover a redefinição numa limpeza futura (a 911 é efetivamente igual à 017) |
+| 907, 908, 911, 912 | triggers em `profiles`, `account_invitations`, `whatsapp_config`, `automations`, `api_keys`, `contacts`, `broadcasts`, `flows`, `webhook_endpoints`, `ai_configs`, `accounts` | dependem de nomes de coluna do upstream (`is_active`, `status`, `revoked_at`, `auto_reply_enabled`, `phone_number_id`) |
 
 ### P-001: arquivos (commit `fbabe3f`, 104 arquivos, +3771/−812)
 
@@ -375,9 +393,10 @@ Ao ser aceito, remover o patch do registro e do código do fork no merge seguint
 
 ---
 
-## 8. O que foi implementado nesta etapa
+## 8. O que foi implementado na etapa inicial (histórico)
 
-Estrutura mínima, sem funcionalidade nova e sem mudança de comportamento:
+Estrutura mínima, sem funcionalidade nova e sem mudança de comportamento
+(estado de 2026-10-05; o registro hoje vai até P-014, ver §4):
 
 | Arquivo | Tipo | Conteúdo |
 |---|---|---|
@@ -399,3 +418,52 @@ importa ainda.
 
 Deliberadamente **não** foi criado: patches de navegação, settings, middleware,
 eventos internos e quota (§1.2). Eles entram com a primeira feature que precisar.
+
+---
+
+## 9. Estado da divergência (auditoria 2026-10-06)
+
+Medido na auditoria da fundação ([`MVP_FOUNDATION_AUDIT.md`](./MVP_FOUNDATION_AUDIT.md)).
+
+| Área (não commitado) | Arquivos | + | − |
+|---|---|---|---|
+| Config/raiz (`.env.local.example`, `AGENTS.md`, `Dockerfile`, `docker-compose.yml`, `package.json`, `vitest.config.ts`, `.gitignore`) | 7 | ~125 | ~5 |
+| Core lib/infra | 23 | 186 | 45 |
+| Componentes do core | 29 | 218 | 115 |
+| Páginas do core | 17 | 138 | 90 |
+| Rotas de API do core | 14 | 171 | 62 |
+
+Marcadores × registro: **0 divergências** (87 de 89 arquivos com marcador;
+`AGENTS.md` e `package.json` são linhas sem marcador por natureza).
+
+**Pontos quentes de conflito** (linhas alteradas × commits do upstream no arquivo):
+
+1. `messages/{en,ko,es,pt}.json` (~700 linhas cada, P-001) — maior risco; mandar upstream.
+2. `api/whatsapp/config/route.ts` (124 linhas, P-008/010/014, 14 marcadores).
+3. `api/whatsapp/webhook/route.ts` (38 linhas, **35 commits** do upstream).
+4. `.env.local.example` (5 patches).
+5. `(dashboard)/settings/page.tsx` (P-004/006/008/010).
+6. `lib/automations/engine.ts`, `inbox/message-thread.tsx`, `automation-builder.tsx`, `lib/whatsapp/meta-api.ts`, `contact-detail-view.tsx`, `contacts/page.tsx`, `template-manager.tsx`.
+
+**Lógica do fork que passou de “1 import + 1 chamada” e deveria ir para a camada do fork**
+(não feito nesta auditoria — refatoração, não correção):
+
+| Arquivo | O que está inline | Destino sugerido |
+|---|---|---|
+| `api/whatsapp/config/route.ts` | checagem de admin própria, validação de Business ID, PIN, campos de saúde, log de conexão, limite + inadimplência | `custom/whatsapp`: `assertConfigAdmin()`, `forkConfigFields()`, `logSaveOutcome()`, `assertCanConnectNumber()` |
+| `api/whatsapp/webhook/route.ts` | bloco de WABA divergente; `automationsAllowed` passado por 3 ramos | `checkDeliveryRouting(config, entry)` + um gate no início |
+| `contact-form.tsx` (15 marcadores), `contact-detail-view.tsx` (10) | perfil BR espalhado em ~10 pontos | `useContactFormExtensions()` + um slot |
+| `import-modal.tsx` | parada por limite dentro do loop | `createImportLimiter()` em `src/billing` |
+| `lib/currency.ts` | `isEnglishFormat()` e ramos em 3 funções | delegar a `custom/locale/format` |
+| `types/index.ts` | união de status e 7 campos de `WhatsAppConfig` | tipo `WhatsAppConfigFork` em `custom/whatsapp` |
+
+**Recomendações para o próximo merge**
+
+1. **Commitar** o trabalho, separando P-001 de P-002…P-014: `core-diff.sh` não
+   enxerga arquivos novos não commitados e o `rerere` não ajuda sem commits.
+2. Mandar P-001 (i18n) e o bug de `deal-form.tsx` upstream.
+3. Estender `core-diff.sh`: incluir arquivos não rastreados, marcadores fora de
+   `src` (Dockerfile, compose, `.env.local.example`) e listar 9xx que tocam
+   objetos de 0xx.
+4. Depois de cada merge: `npm run test:db` (isolamento/revokes),
+   `npm run test:db:race` e `npm run test:flow` (fluxo comercial).

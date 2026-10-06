@@ -1,8 +1,8 @@
 /**
  * GET /api/billing/cron — scheduled (daily is enough): canceled
- * subscriptions whose paid period ended go back to the default plan, and
- * organizations past_due beyond the grace period are suspended
- * (docs/DELINQUENCY.md).
+ * subscriptions whose paid period ended go back to the default plan,
+ * expired trials become past_due, and organizations past_due beyond the
+ * grace period are suspended (docs/DELINQUENCY.md).
  * Header x-cron-secret = BILLING_CRON_SECRET (falls back to
  * AUTOMATION_CRON_SECRET, so one scheduler secret can serve all crons).
  */
@@ -23,7 +23,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const expired = await BillingService.expireSubscriptions();
+  // Trial over without a paid plan → past_due (warning + payment, then grace).
+  const trialsExpired = await BillingService.expireTrials();
   // Delinquency (docs/DELINQUENCY.md): past_due beyond BILLING_GRACE_DAYS → suspended.
   const suspended = await BillingService.enforceDelinquency(graceDaysFromEnv());
-  return NextResponse.json({ ok: true, expired, suspended });
+  return NextResponse.json({ ok: true, expired, trialsExpired, suspended });
 }

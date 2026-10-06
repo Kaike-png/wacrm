@@ -25,6 +25,7 @@ import { getBillingProvider } from '../providers';
 import {
   decideEffects,
   type BillingEffect,
+  type SubscriptionChanges,
   type SubscriptionState,
   type SubscriptionStatus,
 } from './rules';
@@ -101,10 +102,20 @@ interface SubscriptionRow extends SubscriptionState {
   account_id: string;
   cancel_at_period_end: boolean;
   canceled_at: string | null;
+  /** Optimistic-concurrency token for billing_apply_effects (912). */
+  updated_at: string;
 }
 
 const SUB_COLUMNS =
-  'account_id, plan_code, status, provider, external_id, pending_external_id, pending_plan_code, current_period_end, cancel_at_period_end, canceled_at';
+  'account_id, plan_code, status, provider, external_id, pending_external_id, pending_plan_code, current_period_end, cancel_at_period_end, canceled_at, updated_at';
+
+/** Raised when another event changed the same payment/subscription first (SQLSTATE 40001). */
+export class BillingConflictError extends Error {
+  constructor() {
+    super('billing state changed concurrently; retry');
+    this.name = 'BillingConflictError';
+  }
+}
 
 const db = () => supabaseAdmin();
 
@@ -309,12 +320,25 @@ async function resolveAccount(
   return null;
 }
 
+/**
+ * Apply the decided effects. Payment, subscription and organization status
+ * are written in ONE database transaction (billing_apply_effects, 912),
+ * conditional on the state they were decided from: a failure leaves
+ * nothing half-applied, and a concurrent event for the same payment makes
+ * this one fail with BillingConflictError (the gateway retries and the
+ * rules decide again). Gateway calls happen only after the commit.
+ */
 async function applyEffects(
   provider: string,
   accountId: string,
   before: SubscriptionRow | null,
-  effects: BillingEffect[]
+  effects: BillingEffect[],
+  previousPaymentStatus: PaymentStatus | null = null
 ): Promise<void> {
+  let payment: ReturnType<typeof paymentRow> | null = null;
+  let subscription: Record<string, unknown> | null = null;
+  let status: { from: AccountStatus; to: AccountStatus } | null = null;
+  const cancels: string[] = [];
   for (const effect of effects) {
     switch (effect.kind) {
       case 'record_payment': {
@@ -325,53 +349,57 @@ async function applyEffects(
               ? before.pending_plan_code
               : before.plan_code
             : null;
-        await savePayment(provider, accountId, plan, p);
+        payment = paymentRow(provider, accountId, plan, p);
         break;
       }
-      case 'update_subscription': {
-        const changes: Record<string, unknown> = {
-          ...effect.changes,
-          updated_at: new Date().toISOString(),
-        };
-        if (effect.changes.external_id) changes.provider = provider;
-        const { error } = await db()
-          .from('billing_subscriptions')
-          .update(changes)
-          .eq('account_id', accountId);
-        if (error) fail('update subscription', error);
-        forgetEntitlements(accountId);
+      case 'update_subscription':
+        subscription = { ...(subscription ?? {}), ...effect.changes };
+        if (effect.changes.external_id) subscription.provider = provider;
         break;
-      }
-      case 'set_account_status': {
-        // Conditional on the status we decided from: never overwrite a
-        // suspension an operator applied in the meantime.
-        const { error } = await db()
-          .from('accounts')
-          .update({ status: effect.to })
-          .eq('id', accountId)
-          .eq('status', effect.from);
-        if (error) fail('update organization status', error);
-        forgetTenantStatus(accountId); // the policy applies right away
+      case 'set_account_status':
+        status = { from: effect.from, to: effect.to };
         break;
-      }
-      case 'cancel_provider_subscription': {
-        try {
-          await getBillingProvider(
-            before?.provider ?? provider
-          ).cancelSubscription(effect.subscriptionId, {
-            atPeriodEnd: false,
-          });
-        } catch (err) {
-          // The new plan is already paid; a leftover old subscription is
-          // reconciled by hand rather than failing the webhook.
-          console.error(
-            '[billing] could not cancel replaced subscription',
-            effect.subscriptionId,
-            err
-          );
-        }
+      case 'cancel_provider_subscription':
+        cancels.push(effect.subscriptionId);
         break;
-      }
+    }
+  }
+
+  if (payment || subscription || status) {
+    const { error } = await db().rpc('billing_apply_effects', {
+      p_account: accountId,
+      p_provider: provider,
+      p_payment: payment,
+      p_expected_payment_status: payment ? previousPaymentStatus : null,
+      p_subscription: subscription,
+      p_expected_subscription_at:
+        subscription && before ? before.updated_at : null,
+      p_account_from: status?.from ?? null,
+      p_account_to: status?.to ?? null,
+    });
+    if (error) {
+      if ((error as { code?: string }).code === '40001')
+        throw new BillingConflictError();
+      fail('apply billing effects', error);
+    }
+    if (subscription) forgetEntitlements(accountId);
+    if (status) forgetTenantStatus(accountId); // the policy applies right away
+  }
+
+  for (const subscriptionId of cancels) {
+    try {
+      await getBillingProvider(before?.provider ?? provider).cancelSubscription(
+        subscriptionId,
+        { atPeriodEnd: false }
+      );
+    } catch (err) {
+      // The new plan is already paid; a leftover old subscription is
+      // reconciled by hand rather than failing the webhook.
+      console.error(
+        '[billing] could not cancel replaced subscription',
+        subscriptionId,
+        err
+      );
     }
   }
 }
@@ -418,7 +446,13 @@ async function applyEvent(
     previousPaymentStatus,
     now: new Date(),
   });
-  await applyEffects(provider, accountId, subscription, effects);
+  await applyEffects(
+    provider,
+    accountId,
+    subscription,
+    effects,
+    previousPaymentStatus
+  );
   return effects;
 }
 
@@ -554,6 +588,40 @@ async function subscribe(
     method,
   });
 
+  try {
+    return await recordNewSubscription(
+      provider,
+      accountId,
+      plan,
+      current,
+      subscription.id,
+      firstPayment
+    );
+  } catch (err) {
+    // The gateway already has the subscription; without our row nothing
+    // would ever match its charges. Remove it so the customer is not billed
+    // for a plan we never recorded (best effort, then surface the error).
+    await provider
+      .cancelSubscription(subscription.id, { atPeriodEnd: false })
+      .catch((cancelErr) =>
+        console.error(
+          '[billing] could not cancel orphan subscription',
+          subscription.id,
+          cancelErr
+        )
+      );
+    throw err;
+  }
+}
+
+async function recordNewSubscription(
+  provider: BillingProvider,
+  accountId: string,
+  plan: PlanRow,
+  current: SubscriptionRow | null,
+  subscriptionId: string,
+  firstPayment: ProviderPayment
+): Promise<{ payment: PaymentRow }> {
   const keepsActive =
     current && (current.status === 'active' || current.status === 'past_due');
   // No row yet (organization from before plans existed): it stays on the
@@ -572,7 +640,7 @@ async function subscribe(
     plan_code: basePlan,
     status: (keepsActive ? current.status : 'pending') as SubscriptionStatus,
     provider: keepsActive ? current.provider : provider.id,
-    pending_external_id: subscription.id,
+    pending_external_id: subscriptionId,
     pending_plan_code: plan.code,
     updated_at: new Date().toISOString(),
   };
@@ -600,35 +668,29 @@ async function cancel(accountId: string): Promise<void> {
       atPeriodEnd: false,
     });
   }
+  const changes: SubscriptionChanges = {};
   if (current.external_id && current.status !== 'canceled') {
     const sub = await provider.cancelSubscription(current.external_id, {
       atPeriodEnd: true,
     });
-    await applyEffects(provider.id, accountId, current, [
-      {
-        kind: 'update_subscription',
-        changes: {
-          status: 'canceled',
-          cancel_at_period_end: true,
-          canceled_at: new Date().toISOString(),
-          current_period_end:
-            sub.currentPeriodEnd ?? current.current_period_end,
-        },
-      },
-    ]);
+    Object.assign(changes, {
+      status: 'canceled',
+      cancel_at_period_end: true,
+      canceled_at: new Date().toISOString(),
+      current_period_end: sub.currentPeriodEnd ?? current.current_period_end,
+    });
   }
   if (current.pending_external_id) {
+    Object.assign(changes, {
+      pending_external_id: null,
+      pending_plan_code: null,
+      ...(current.status === 'pending' ? { status: 'manual' as const } : {}),
+    });
+  }
+  if (Object.keys(changes).length > 0) {
+    // One write (912 checks the subscription did not change meanwhile).
     await applyEffects(provider.id, accountId, current, [
-      {
-        kind: 'update_subscription',
-        changes: {
-          pending_external_id: null,
-          pending_plan_code: null,
-          ...(current.status === 'pending'
-            ? { status: 'manual' as const }
-            : {}),
-        },
-      },
+      { kind: 'update_subscription', changes },
     ]);
   }
   if (!current.external_id && !current.pending_external_id)
@@ -761,6 +823,14 @@ async function expireSubscriptions(): Promise<number> {
   return Number(data ?? 0);
 }
 
+/** Trials past trial_ends_at → past_due (then the delinquency grace period). */
+async function expireTrials(): Promise<number> {
+  const { data, error } = await db().rpc('billing_expire_trials');
+  if (error) fail('expire trials', error);
+  forgetTenantStatus();
+  return Number(data ?? 0);
+}
+
 export const BillingService = {
   subscribe,
   cancel,
@@ -770,5 +840,6 @@ export const BillingService = {
   handleWebhook,
   getOverview,
   expireSubscriptions,
+  expireTrials,
   enforceDelinquency,
 } as const;

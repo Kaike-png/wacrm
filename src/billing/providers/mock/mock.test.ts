@@ -109,3 +109,37 @@ describe('mock gateway specifics', () => {
     ).rejects.toThrow(/unknown subscription/);
   });
 });
+
+describe('mock gateway in production (audit F1)', () => {
+  it('refuses webhooks in production unless explicitly allowed', async () => {
+    const {
+      MockBillingProvider: Mock,
+      mockAllowed,
+      mockWebhookSecret,
+    } = await import('./index');
+    const prod = { NODE_ENV: 'production' } as NodeJS.ProcessEnv;
+    expect(mockAllowed(prod)).toBe(false);
+    expect(
+      mockAllowed({ ...prod, BILLING_ALLOW_MOCK: 'true' } as NodeJS.ProcessEnv)
+    ).toBe(true);
+    // the public dev secret is never used in production
+    expect(mockWebhookSecret(prod)).toBe('');
+
+    const provider = new Mock('s3cret');
+    const { rawBody, headers } = provider.webhookFor({
+      id: 'evt_x',
+      type: 'payment.updated',
+      occurredAt: new Date().toISOString(),
+    });
+    const env = process.env as Record<string, string | undefined>;
+    const prev = env.NODE_ENV;
+    env.NODE_ENV = 'production';
+    try {
+      await expect(provider.parseWebhook({ rawBody, headers })).rejects.toThrow(
+        /disabled in production/
+      );
+    } finally {
+      env.NODE_ENV = prev;
+    }
+  });
+});

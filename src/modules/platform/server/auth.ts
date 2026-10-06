@@ -62,6 +62,15 @@ export async function requirePlatformAdminMutation(
   request: Request
 ): Promise<PlatformAdmin> {
   const origin = request.headers.get('origin');
+  // No Origin: still refuse what the browser itself flags as cross-site.
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (
+    !origin &&
+    fetchSite &&
+    fetchSite !== 'same-origin' &&
+    fetchSite !== 'none'
+  )
+    throw new PlatformAccessDenied();
   if (origin) {
     const host =
       request.headers.get('x-forwarded-host') ?? request.headers.get('host');

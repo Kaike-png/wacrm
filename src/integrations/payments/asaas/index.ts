@@ -87,8 +87,10 @@ export class AsaasBillingProvider implements BillingProvider {
     private readonly config: AsaasConfig = readAsaasConfig(),
     fetchImpl?: FetchLike,
     private readonly pollDelayMs = 400,
+    // Re-reading events from the API is mandatory in production: the token
+    // does not sign the body (ASAAS_WEBHOOK_VERIFY=false is for tests only).
     private readonly verifyWebhook = process.env.ASAAS_WEBHOOK_VERIFY !==
-      'false'
+      'false' || process.env.NODE_ENV === 'production'
   ) {
     this.api = new AsaasClient(config, fetchImpl);
     this.displayName =
@@ -208,22 +210,34 @@ export class AsaasBillingProvider implements BillingProvider {
 
     // Asaas generates the first charge right after creating the subscription.
     let first: AsaasPayment | undefined;
-    for (let attempt = 0; attempt < 4 && !first; attempt++) {
-      if (attempt > 0) await sleep(this.pollDelayMs * attempt);
-      const list = await this.api.request<{ data?: AsaasPayment[] }>(
-        'GET',
-        `/subscriptions/${encodeURIComponent(sub.id)}/payments`
+    try {
+      for (let attempt = 0; attempt < 4 && !first; attempt++) {
+        if (attempt > 0) await sleep(this.pollDelayMs * attempt);
+        const list = await this.api.request<{ data?: AsaasPayment[] }>(
+          'GET',
+          `/subscriptions/${encodeURIComponent(sub.id)}/payments`
+        );
+        first = (list.data ?? []).sort((a, b) =>
+          (a.dueDate ?? '').localeCompare(b.dueDate ?? '')
+        )[0];
+      }
+      if (!first) {
+        throw new BillingProviderError(
+          this.id,
+          `subscription ${sub.id} has no first charge yet`,
+          true
+        );
+      }
+    } catch (err) {
+      // Do not leave a subscription we cannot record: Asaas would bill it.
+      await this.cancelSubscription(sub.id, { atPeriodEnd: false }).catch(
+        (cancelErr) =>
+          console.error(
+            `[asaas] could not remove subscription ${sub.id} without first charge`,
+            cancelErr
+          )
       );
-      first = (list.data ?? []).sort((a, b) =>
-        (a.dueDate ?? '').localeCompare(b.dueDate ?? '')
-      )[0];
-    }
-    if (!first) {
-      throw new BillingProviderError(
-        this.id,
-        `subscription ${sub.id} has no first charge yet`,
-        true
-      );
+      throw err;
     }
     return {
       subscription: {

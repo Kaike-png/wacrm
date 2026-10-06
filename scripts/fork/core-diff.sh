@@ -18,7 +18,7 @@ fi
 base="$(git merge-base HEAD "$ref")"
 
 # Fork-owned paths: never conflict with upstream by construction.
-owned='^(src/custom/|src/billing/|src/modules/|src/integrations/|src/app/(.*/)?\(fork\)/|supabase/migrations/9[0-9][0-9]_|scripts/fork/|public/brand/|docs/SAAS_BR_ANALYSIS\.md$|docs/UPSTREAM_STRATEGY\.md$|docs/BRANDING\.md$|docs/LOCALIZATION\.md$|docs/BRAZILIAN_CONTACTS\.md$|docs/TENANCY\.md$|docs/ONBOARDING\.md$|docs/WHATSAPP_SAAS\.md$|docs/PLATFORM_ADMIN\.md$|docs/PLANS\.md$|docs/USAGE\.md$|docs/BILLING\.md$|docs/ASAAS\.md$|docs/DELINQUENCY\.md$|supabase/tests/|\.github/workflows/fork-)'
+owned='^(src/custom/|src/billing/|src/modules/|src/integrations/|src/app/(.*/)?\(fork\)/|supabase/migrations/9[0-9][0-9]_|scripts/fork/|public/brand/|docs/SAAS_BR_ANALYSIS\.md$|docs/UPSTREAM_STRATEGY\.md$|docs/BRANDING\.md$|docs/LOCALIZATION\.md$|docs/BRAZILIAN_CONTACTS\.md$|docs/TENANCY\.md$|docs/ONBOARDING\.md$|docs/WHATSAPP_SAAS\.md$|docs/PLATFORM_ADMIN\.md$|docs/PLANS\.md$|docs/USAGE\.md$|docs/BILLING\.md$|docs/ASAAS\.md$|docs/DELINQUENCY\.md$|docs/MVP_FOUNDATION_AUDIT\.md$|supabase/tests/|\.github/workflows/fork-)'
 
 echo "upstream ref : $ref"
 echo "merge-base   : $(git log -1 --format='%h %ad %s' --date=short "$base")"
