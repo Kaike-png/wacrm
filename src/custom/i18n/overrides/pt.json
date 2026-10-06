@@ -1,0 +1,20 @@
+{
+  "Sidebar": {
+    "title": "%APP_NAME%"
+  },
+  "SignupPage": {
+    "desc": "Comece a usar o %APP_NAME%"
+  },
+  "Metadata": {
+    "description": "%APP_DESCRIPTION%"
+  },
+  "Settings": {
+    "sections": {
+      "deals": "Região e moeda"
+    },
+    "deals": {
+      "title": "Região e moeda",
+      "description": "Moeda padrão, formato de data e números e fuso horário de toda a conta."
+    }
+  }
+}

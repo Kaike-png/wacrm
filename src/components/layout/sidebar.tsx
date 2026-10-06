@@ -27,6 +27,8 @@ import {
   Zap,
 } from "lucide-react";
 import type { AccountRole } from "@/lib/auth/roles";
+// FORK-PATCH(P-003): brand mark from config — docs/BRANDING.md
+import { BrandMark } from "@/custom/brand/brand-mark";
 
 // Per-role chip metadata used in the sidebar's account strip + the
 // Members tab roster. Keeping this near both consumers in a single
@@ -188,9 +190,8 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
             close button is hidden since the sidebar is always-visible. */}
         <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <MessageSquare className="h-4 w-4" />
-            </div>
+            {/* FORK-PATCH(P-003): brand mark from config */}
+            <BrandMark />
             <span className="text-sm font-semibold text-foreground">
               {t("title")}
             </span>

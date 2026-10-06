@@ -27,6 +27,8 @@
 
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+// FORK-PATCH(P-003): brand frame for public pages — docs/BRANDING.md
+import { PublicBrandFrame } from '@/custom/brand/public-frame';
 
 export const metadata: Metadata = {
   referrer: 'no-referrer',
@@ -37,8 +39,10 @@ export const metadata: Metadata = {
 
 export default function JoinLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      {children}
-    </div>
+    <PublicBrandFrame>
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        {children}
+      </div>
+    </PublicBrandFrame>
   );
 }

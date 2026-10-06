@@ -14,6 +14,8 @@ import {
   STORAGE_KEY,
   THEME_IDS,
 } from "@/lib/themes";
+// FORK-PATCH(P-003): brand config — docs/BRANDING.md
+import { brandMetadata } from "@/custom/brand/metadata";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -24,15 +26,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Metadata");
   return {
     ...metadata,
-    description: t("description"),
+    // FORK-PATCH(P-003): title, applicationName, description, OG from brand config
+    ...brandMetadata(t("description")),
   };
 }
 
 const metadata: Metadata = {
-  title: {
-    default: "wacrm",
-    template: "%s — wacrm",
-  },
   robots: {
     index: false,
     follow: false,

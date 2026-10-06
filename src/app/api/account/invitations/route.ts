@@ -33,6 +33,8 @@ import {
   RATE_LIMITS,
 } from "@/lib/rate-limit";
 import { getT } from "@/lib/i18n/translate";
+// FORK-PATCH(P-003): canonical URL from brand config — docs/BRANDING.md
+import { brand } from "@/custom/brand/config";
 
 const t = getT("Api");
 
@@ -95,7 +97,8 @@ function isHostAllowed(
 }
 
 function getBaseUrl(request: Request): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  // FORK-PATCH(P-003): NEXT_PUBLIC_APP_URL (or legacy NEXT_PUBLIC_SITE_URL) via brand config.
+  const explicit = brand.url;
   if (explicit) return explicit.replace(/\/+$/, "");
 
   const allowList = parseAllowedHosts();
@@ -131,10 +134,13 @@ function getBaseUrl(request: Request): string {
     );
   } else {
     console.warn(
-      "[POST /api/account/invitations] could not derive base URL from request; falling back to marketing domain",
+      "[POST /api/account/invitations] could not derive base URL from request; set NEXT_PUBLIC_APP_URL",
     );
   }
-  return "https://wacrm.tech";
+  // FORK-PATCH(P-003): no upstream marketing-domain fallback. Reaching
+  // here means brand.url is empty (otherwise `explicit` returned it), so
+  // the link is path-only instead of pointing at a third-party domain.
+  return brand.url;
 }
 
 const MAX_LABEL_LEN = 80;

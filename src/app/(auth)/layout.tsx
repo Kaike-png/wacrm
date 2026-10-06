@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+// FORK-PATCH(P-003): brand frame for public pages — docs/BRANDING.md
+import { PublicBrandFrame } from "@/custom/brand/public-frame";
 
 // Shared metadata for auth pages (login / signup / forgot-password).
 // None of these should be indexed — they'd compete with the marketing
@@ -20,5 +22,6 @@ export const metadata: Metadata = {
 };
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return children;
+  // FORK-PATCH(P-003): brand lockup + support contact on public pages
+  return <PublicBrandFrame>{children}</PublicBrandFrame>;
 }

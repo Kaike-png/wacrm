@@ -1,0 +1,20 @@
+{
+  "Sidebar": {
+    "title": "%APP_NAME%"
+  },
+  "SignupPage": {
+    "desc": "Get started with %APP_NAME%"
+  },
+  "Metadata": {
+    "description": "%APP_DESCRIPTION%"
+  },
+  "Settings": {
+    "sections": {
+      "deals": "Currency & region"
+    },
+    "deals": {
+      "title": "Currency & region",
+      "description": "Default currency, date and number format, and time zone for the whole account."
+    }
+  }
+}

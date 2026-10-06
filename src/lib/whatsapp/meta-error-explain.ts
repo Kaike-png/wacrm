@@ -14,6 +14,9 @@
  * Error codes: https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes
  */
 
+// FORK-PATCH(P-003): product name in user-facing text — docs/BRANDING.md
+import { brand } from '@/custom/brand/config'
+
 /** Which call of the connect flow failed. */
 export type MetaConnectStep =
   | 'verify_number'
@@ -232,7 +235,7 @@ export function explainMetaError(
   if (code === 133010) {
     return build(
       'This phone number is not registered with the WhatsApp Cloud API yet. Enter the two-step ' +
-        'verification PIN below and save again so wacrm can register it (POST /register).',
+        `verification PIN below and save again so ${brand.name} can register it (POST /register).`, // FORK-PATCH(P-003)
       'pin',
       'user',
     )
@@ -273,7 +276,7 @@ export function explainMetaError(
   // --- Account state ------------------------------------------------------
   if (code === 131031) {
     return build(
-      'Meta has restricted or locked this WhatsApp Business Account, so nothing in wacrm can ' +
+      `Meta has restricted or locked this WhatsApp Business Account, so nothing in ${brand.name} can ` + // FORK-PATCH(P-003)
         'connect it. Open Meta Business Manager → Account quality (or WhatsApp Manager → Overview) ' +
         'to see the restriction and appeal it.',
       'meta_account',
