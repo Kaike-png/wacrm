@@ -1,5 +1,7 @@
 "use client"
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatNumber } from '@/custom/locale/format'
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
@@ -139,7 +141,7 @@ export default function DashboardPage() {
           <>
             <MetricCard
               title={t('activeConversations')}
-              value={metrics.activeConversations.current.toLocaleString()}
+              value={formatNumber(metrics.activeConversations.current)}
               icon={MessageSquare}
               delta={{
                 sign: metrics.activeConversations.previous,
@@ -152,7 +154,7 @@ export default function DashboardPage() {
             />
             <MetricCard
               title={t('newContactsToday')}
-              value={metrics.newContactsToday.current.toLocaleString()}
+              value={formatNumber(metrics.newContactsToday.current)}
               icon={UserPlus}
               delta={{
                 sign:
@@ -172,7 +174,7 @@ export default function DashboardPage() {
             />
             <MetricCard
               title={t('messagesSentToday')}
-              value={metrics.messagesSentToday.current.toLocaleString()}
+              value={formatNumber(metrics.messagesSentToday.current)}
               icon={Send}
               delta={{
                 sign:
@@ -230,5 +232,5 @@ export default function DashboardPage() {
 function deltaLabel(delta: number, suffix: string, noChangeLabel: string): string {
   if (delta === 0) return noChangeLabel
   const sign = delta > 0 ? '+' : ''
-  return `${sign}${delta.toLocaleString()} ${suffix}`
+  return `${sign}${formatNumber(delta)} ${suffix}`
 }

@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatCalendarDate } from "@/custom/locale/format";
 import type { Deal, PipelineStage } from "@/types";
 import { Calendar, Check, X } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
@@ -12,12 +14,9 @@ interface DealCardProps {
   isOverlay?: boolean;
 }
 
+// FORK-PATCH(P-004): DATE column — calendar date, never shifted by the time zone.
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatCalendarDate(dateStr, "medium");
 }
 
 function initials(name?: string, fallback?: string) {

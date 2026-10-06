@@ -72,6 +72,8 @@ import {
   type StepPath,
 } from "@/lib/automations/builder-tree"
 import { cn } from "@/lib/utils"
+// FORK-PATCH(P-004): locale-aware number input — docs/LOCALIZATION.md
+import { LocaleNumberInput } from "@/custom/locale/number-input"
 
 // ------------------------------------------------------------
 // Types (builder-local — mirror the flattened rows we POST)
@@ -1407,10 +1409,10 @@ function StepEditor({
             />
           </FieldBlock>
           <FieldBlock label={t("config.valueLabel")}>
-            <Input
-              type="number"
+            {/* FORK-PATCH(P-004): accepts "1.500,50" — docs/LOCALIZATION.md */}
+            <LocaleNumberInput
               value={(cfg.value as number) ?? 0}
-              onChange={(e) => set({ value: Number(e.target.value) })}
+              onValueChange={(v) => set({ value: v ?? 0 })}
               className="bg-muted text-foreground"
             />
           </FieldBlock>

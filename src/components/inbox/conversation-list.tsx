@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatListTimestamp } from "@/custom/locale/format";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -10,7 +12,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { Conversation, ConversationStatus, Tag } from "@/types";
 import { Search, ChevronDown, X } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import {
@@ -444,10 +445,9 @@ function ConversationItem({
     onSelect(conversation);
   }, [onSelect, conversation]);
 
+  // FORK-PATCH(P-004): WhatsApp-style "14:30" / "ontem" / "seg." / "05/10/2026".
   const timeAgo = conversation.last_message_at
-    ? formatDistanceToNow(new Date(conversation.last_message_at), {
-        addSuffix: false,
-      })
+    ? formatListTimestamp(conversation.last_message_at)
     : "";
 
   return (

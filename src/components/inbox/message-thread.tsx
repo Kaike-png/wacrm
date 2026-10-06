@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDate, dayKey, isTodayInTz, isYesterdayInTz } from "@/custom/locale/format";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,7 +30,7 @@ import {
   PanelRightOpen,
   PanelRightClose,
 } from "lucide-react";
-import { format, isToday, isYesterday, differenceInHours } from "date-fns";
+import { differenceInHours } from "date-fns";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -109,10 +111,10 @@ interface MessageThreadProps {
 }
 
 function formatDateSeparator(dateStr: string, t: ReturnType<typeof useTranslations>): string {
-  const date = new Date(dateStr);
-  if (isToday(date)) return t("today");
-  if (isYesterday(date)) return t("yesterday");
-  return format(date, "MMMM d, yyyy");
+  // FORK-PATCH(P-004): calendar days in the tenant time zone, localized.
+  if (isTodayInTz(dateStr)) return t("today");
+  if (isYesterdayInTz(dateStr)) return t("yesterday");
+  return formatDate(dateStr, "long");
 }
 
 function groupMessagesByDate(messages: Message[]) {
@@ -120,7 +122,7 @@ function groupMessagesByDate(messages: Message[]) {
   let currentDate = "";
 
   for (const msg of messages) {
-    const day = format(new Date(msg.created_at), "yyyy-MM-dd");
+    const day = dayKey(msg.created_at); // FORK-PATCH(P-004)
     if (day !== currentDate) {
       currentDate = day;
       groups.push({ date: msg.created_at, messages: [msg] });

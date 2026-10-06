@@ -1,5 +1,7 @@
 'use client';
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDate } from '@/custom/locale/format';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -278,7 +280,7 @@ export default function BroadcastsPage() {
                       </span>
                     </TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">
-                      {new Date(broadcast.created_at).toLocaleDateString()}
+                      {formatDate(broadcast.created_at, 'medium')}
                     </TableCell>
                   </TableRow>
                 );

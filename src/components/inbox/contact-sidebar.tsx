@@ -1,8 +1,11 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDateTime } from "@/custom/locale/format";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import type { Contact, Deal, ContactNote, Tag } from "@/types";
 import {
@@ -18,7 +21,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { contactHandle } from "@/lib/whatsapp/wa-identity";
 
@@ -30,7 +32,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
   const tSidebar = useTranslations("Inbox.sidebar");
   const tThread = useTranslations("Inbox.messageThread");
 
-  const { accountId } = useAuth();
+  const { accountId, defaultCurrency } = useAuth(); // FORK-PATCH(P-004)
   const [copied, setCopied] = useState(false);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [notes, setNotes] = useState<ContactNote[]>([]);
@@ -236,8 +238,8 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
                     </p>
                     <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
                       <span>
-                        {deal.currency ?? "$"}
-                        {deal.value.toLocaleString()}
+                        {/* FORK-PATCH(P-004): was `{currency}{n}` ("BRL1234") */}
+                        {formatCurrency(deal.value, deal.currency || defaultCurrency)}
                       </span>
                       {deal.stage && (
                         <span
@@ -295,7 +297,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
                       {note.note_text}
                     </p>
                     <p className="mt-1 text-[10px] text-muted-foreground">
-                      {format(new Date(note.created_at), "MMM d, yyyy HH:mm")}
+                      {formatDateTime(note.created_at, "medium")}
                     </p>
                   </div>
                 ))}

@@ -22,6 +22,8 @@
 // this page after email verification.
 // ============================================================
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDate } from '@/custom/locale/format';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -294,11 +296,7 @@ export default function JoinPage() {
       <CardDescription className="text-muted-foreground">
         {t.rich('joinAs', {
           role: tRoles(peek.role),
-          date: new Date(peek.expires_at).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          }),
+          date: formatDate(peek.expires_at, 'medium'), // FORK-PATCH(P-004)
           badge: (chunks) => (
             <span className="inline-flex items-center gap-1 text-foreground">
               <ShieldCheck className="size-3.5 text-primary" />

@@ -38,6 +38,8 @@ import {
   Tag,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+// FORK-PATCH(P-004): decode Excel pt-BR CSVs (Windows-1252) — docs/LOCALIZATION.md
+import { readCsvFile } from '@/custom/locale/csv';
 
 const DEFAULT_TAG_COLOR = '#3b82f6';
 const PREVIEW_LIMIT = 5;
@@ -170,7 +172,7 @@ export function ImportModal({
     setFile(selected);
     setResult(null);
 
-    const text = await selected.text();
+    const text = await readCsvFile(selected); // FORK-PATCH(P-004): UTF-8 or Windows-1252
     const {
       rows,
       hasTagsColumn: csvHasTags,

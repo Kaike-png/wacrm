@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): localized mode/theme labels — docs/LOCALIZATION.md
+import { modeLabel, themeName, themeTagline } from "@/custom/i18n/labels";
 import { Check, Moon, Palette, SunMoon, Sun } from "lucide-react";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -64,8 +66,8 @@ export function AppearancePanel() {
             <ThemeCard
               key={tObj.id}
               id={tObj.id}
-              name={tObj.name}
-              tagline={tObj.tagline}
+              name={themeName(tObj.id, tObj.name)}
+              tagline={themeTagline(tObj.id, tObj.tagline)}
               swatch={tObj.swatch}
               isActive={tObj.id === theme}
               onPick={() => setTheme(tObj.id)}
@@ -95,7 +97,7 @@ function ModeCard({
       role="radio"
       onClick={onPick}
       aria-checked={isActive}
-      aria-label={t("useMode", { mode })}
+      aria-label={t("useMode", { mode: modeLabel(mode) })}
       className={cn(
         "flex items-center gap-3 rounded-lg border bg-card p-4 text-left transition-colors",
         isActive
@@ -110,7 +112,7 @@ function ModeCard({
         <Icon className="h-4 w-4" />
       </span>
       <span className="flex-1 text-sm font-semibold capitalize text-foreground">
-        {mode}
+        {modeLabel(mode)}
       </span>
       {isActive && (
         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">

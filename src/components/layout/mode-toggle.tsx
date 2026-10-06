@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): localized mode/theme labels — docs/LOCALIZATION.md
+import { modeLabel } from "@/custom/i18n/labels";
 import { Moon, Sun } from "lucide-react";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -19,7 +21,7 @@ export function ModeToggle({ className }: { className?: string }) {
   const t = useTranslations("ModeToggle");
   const { mode, toggleMode } = useTheme();
   const goingTo = mode === "dark" ? "light" : "dark";
-  const switchLabel = t("switchMode", { mode: goingTo });
+  const switchLabel = t("switchMode", { mode: modeLabel(goingTo) });
   
   return (
     <button

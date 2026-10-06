@@ -1,12 +1,13 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatRelativeTime } from "@/custom/locale/format";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { Notification } from "@/types";
 import { Bell, CheckCheck, Loader2, UserPlus } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -253,9 +254,7 @@ export default function NotificationsPage() {
                       </p>
                     )}
                     <p className="mt-1 text-[11px] text-muted-foreground/70">
-                      {formatDistanceToNow(new Date(n.created_at), {
-                        addSuffix: true,
-                      })}
+                      {formatRelativeTime(n.created_at)}
                     </p>
                   </div>
                 </button>

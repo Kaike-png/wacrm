@@ -5,6 +5,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { CURRENCIES } from "@/lib/currency";
+// FORK-PATCH(P-004): locale-aware value input ("1.500,50") — docs/LOCALIZATION.md
+import { parseLocaleNumber, toLocaleInputNumber } from "@/custom/locale/format";
 import type {
   Contact,
   Conversation,
@@ -28,7 +30,6 @@ import {
   X,
   Trash2,
   MessageSquare,
-  DollarSign,
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -85,7 +86,7 @@ export function DealForm({
     setConfirmDelete(false);
     if (deal) {
       setTitle(deal.title);
-      setValue(String(deal.value ?? ""));
+      setValue(toLocaleInputNumber(deal.value)); // FORK-PATCH(P-004)
       setCurrency(deal.currency || defaultCurrency);
       // contact_id is nullable when the contact has been deleted
       // (migration 004: ON DELETE SET NULL). "" means "no selection".
@@ -160,7 +161,7 @@ export function DealForm({
 
     const payload = {
       title: title.trim(),
-      value: parseFloat(value) || 0,
+      value: parseLocaleNumber(value) ?? 0, // FORK-PATCH(P-004)
       currency,
       contact_id: contactId,
       pipeline_id: pipelineId,
@@ -299,13 +300,18 @@ export function DealForm({
               <div className="grid gap-2">
                 <Label className="text-muted-foreground">{t("value")}</Label>
                 <div className="relative">
-                  <DollarSign className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  {/* FORK-PATCH(P-004): selected currency's symbol (R$) instead of a fixed "$"; text
+                      input so "1.500,50" is accepted (type=number rejects or misreads it). */}
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                    {CURRENCIES.find((c) => c.code === currency)?.symbol ?? currency}
+                  </span>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     placeholder="0"
-                    className="border-border bg-muted pl-7 text-foreground"
+                    className="border-border bg-muted pl-9 text-foreground"
                   />
                 </div>
               </div>

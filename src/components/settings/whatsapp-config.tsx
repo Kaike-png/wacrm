@@ -1,5 +1,7 @@
 'use client';
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDateTime } from '@/custom/locale/format';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
@@ -687,7 +689,7 @@ export function WhatsAppConfig() {
                   dangerouslySetInnerHTML={{
                     __html: t('subscribedSince', {
                       date: config.registered_at
-                        ? new Date(config.registered_at).toLocaleString()
+                        ? formatDateTime(config.registered_at)
                         : t('unknownDate'),
                     }),
                   }}

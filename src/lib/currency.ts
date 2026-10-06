@@ -11,9 +11,13 @@
  */
 
 import { getT } from "@/lib/i18n/translate";
+// FORK-PATCH(P-004): tenant locale + regional default currency — docs/LOCALIZATION.md
+import { regionalDefaults } from "@/custom/locale/config";
+import { formatCompact, formatMoney, getActiveLocaleSettings } from "@/custom/locale/format";
 
 /** App-wide fallback when no account/deal currency is available. */
-export const DEFAULT_CURRENCY = "USD";
+// FORK-PATCH(P-004): BRL on pt deploys (NEXT_PUBLIC_DEFAULT_CURRENCY overrides); USD otherwise.
+export const DEFAULT_CURRENCY = regionalDefaults.currency;
 
 export interface CurrencyOption {
   /** ISO-4217 code, e.g. "USD". Stored verbatim in the DB. */
@@ -69,7 +73,8 @@ export function formatCurrency(
   const code = (currency || DEFAULT_CURRENCY).trim();
   const amount = Number(value) || 0;
   try {
-    return new Intl.NumberFormat(undefined, {
+    // FORK-PATCH(P-004): tenant formatting locale instead of the browser's.
+    return new Intl.NumberFormat(getActiveLocaleSettings().locale, {
       style: "currency",
       currency: code,
       minimumFractionDigits: 0,
@@ -78,7 +83,7 @@ export function formatCurrency(
   } catch {
     // Invalid ISO code — show the raw code + grouped number so the
     // value is still legible instead of throwing.
-    return `${code} ${new Intl.NumberFormat(undefined, {
+    return `${code} ${new Intl.NumberFormat(getActiveLocaleSettings().locale, { // FORK-PATCH(P-004)
       maximumFractionDigits: 0,
     }).format(amount)}`;
   }
@@ -94,6 +99,9 @@ export function formatCurrencyShort(
   currency: string = DEFAULT_CURRENCY,
 ): string {
   const code = currency || DEFAULT_CURRENCY;
+  // FORK-PATCH(P-004): non-English locales get Intl compact ("R$ 1,5 mil");
+  // English keeps upstream's "$1.5k".
+  if (!isEnglishFormat()) return formatMoney(value, code, { compact: true });
   const symbol = CURRENCIES.find((c) => c.code === code)?.symbol ?? `${code} `;
   return `${symbol}${formatCompactNumber(value)}`;
 }
@@ -105,7 +113,13 @@ export function formatCurrencyShort(
  */
 export function formatCompactNumber(value: number): string {
   const v = Number(value || 0);
+  if (!isEnglishFormat()) return formatCompact(v); // FORK-PATCH(P-004): "1,5 mil"
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
   return v.toFixed(0);
+}
+
+// FORK-PATCH(P-004): upstream's hand-rolled compact style is English-only.
+function isEnglishFormat(): boolean {
+  return getActiveLocaleSettings().locale.toLowerCase().startsWith("en");
 }

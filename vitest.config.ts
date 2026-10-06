@@ -15,6 +15,12 @@ export default defineConfig({
       ENCRYPTION_KEY:
         "0000000000000000000000000000000000000000000000000000000000000000",
       META_APP_SECRET: "test-meta-app-secret",
+      // FORK-PATCH(P-004): the fork defaults to pt-BR / America/Sao_Paulo
+      // (docs/LOCALIZATION.md); tests keep upstream's English catalogue
+      // and a fixed UTC clock so they pass on any developer machine.
+      NEXT_PUBLIC_APP_LOCALE: "en",
+      NEXT_PUBLIC_DEFAULT_TIMEZONE: "UTC",
+      TZ: "UTC",
     },
     clearMocks: true,
   },

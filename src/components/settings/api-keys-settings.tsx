@@ -15,6 +15,8 @@
 // bug (same lesson as the invite-link flow).
 // ============================================================
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDate } from '@/custom/locale/format';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Copy, KeyRound, Loader2, Plus, Trash2 } from 'lucide-react';
@@ -55,11 +57,7 @@ interface ApiKey {
 }
 
 function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  return formatDate(iso, 'medium'); // FORK-PATCH(P-004)
 }
 
 function keyStatus(k: ApiKey): 'active' | 'revoked' | 'expired' {

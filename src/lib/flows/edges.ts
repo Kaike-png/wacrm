@@ -23,6 +23,10 @@
  */
 
 import type { BuilderNode } from "@/components/flows/shared";
+// FORK-PATCH(P-004): localized branch/slot labels (en keeps "true"/"false"/"Next")
+import { getT } from "@/lib/i18n/translate";
+
+const tEdge = getT("Custom.flows.edges");
 
 export interface CanvasEdge {
   /** Stable per-edge id — required by React-Flow. */
@@ -70,7 +74,7 @@ export function deriveCanvasEdges(nodes: BuilderNode[]): CanvasEdge[] {
             source: node.node_key,
             target: trueNext,
             sourceHandle: "true",
-            label: "true",
+            label: tEdge("true"),
           });
         }
         if (falseNext && knownKeys.has(falseNext)) {
@@ -79,7 +83,7 @@ export function deriveCanvasEdges(nodes: BuilderNode[]): CanvasEdge[] {
             source: node.node_key,
             target: falseNext,
             sourceHandle: "false",
-            label: "false",
+            label: tEdge("false"),
           });
         }
         break;
@@ -179,12 +183,12 @@ export function outgoingSlots(node: BuilderNode): OutgoingSlot[] {
     case "send_media":
     case "collect_input":
     case "set_tag":
-      return [{ id: "next", label: "Next" }];
+      return [{ id: "next", label: tEdge("next") }];
 
     case "condition":
       return [
-        { id: "true", label: "true" },
-        { id: "false", label: "false" },
+        { id: "true", label: tEdge("true") },
+        { id: "false", label: tEdge("false") },
       ];
 
     case "send_buttons": {

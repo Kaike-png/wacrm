@@ -1,5 +1,7 @@
 'use client';
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatNumber } from "@/custom/locale/format";
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { MessageTemplate } from '@/types';
@@ -132,7 +134,7 @@ export function Step4ScheduleSend({
               ) : (
                 <>
                   <Users className="h-3.5 w-3.5 text-primary" />
-                  <p className="font-medium text-foreground">{estimatedReach.toLocaleString()}</p>
+                  <p className="font-medium text-foreground">{formatNumber(estimatedReach)}</p>
                 </>
               )}
             </div>

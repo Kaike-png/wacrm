@@ -1,5 +1,7 @@
 "use client"
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatCalendarDate } from "@/custom/locale/format"
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MessageSquare } from 'lucide-react'
 import type { ConversationsSeriesPoint } from '@/lib/dashboard/types'
@@ -317,15 +319,11 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 function shortDayLabel(key: string): string {
   // key is YYYY-MM-DD; return "Apr 17"-style. Using Date with an
   // appended time avoids timezone-shift surprises across midnight.
-  const [y, m, d] = key.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return formatCalendarDate(key, 'dayMonth') // FORK-PATCH(P-004)
 }
 
 function longDayLabel(key: string): string {
-  const [y, m, d] = key.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  return formatCalendarDate(key, 'weekdayDayMonth') // FORK-PATCH(P-004)
 }
 
 /**

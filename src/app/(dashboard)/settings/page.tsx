@@ -1,5 +1,7 @@
 'use client';
 
+// FORK-PATCH(P-004): localized mode/theme labels — docs/LOCALIZATION.md
+import { modeLabel } from '@/custom/i18n/labels';
 import { Suspense, useMemo, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -16,6 +18,8 @@ import { TemplateManager } from '@/components/settings/template-manager';
 import { QuickRepliesManager } from '@/components/settings/quick-replies-manager';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
 import { DealsSettings } from '@/components/settings/deals-settings';
+// FORK-PATCH(P-004): regional format + time zone card — docs/LOCALIZATION.md
+import { RegionalSettings } from '@/custom/locale/regional-settings';
 import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import {
@@ -63,7 +67,7 @@ function SettingsPageInner() {
   // already in context.
   const hints: Partial<Record<SettingsSection, ReactNode>> = useMemo(
     () => ({
-      appearance: mode.charAt(0).toUpperCase() + mode.slice(1),
+      appearance: modeLabel(mode).charAt(0).toUpperCase() + modeLabel(mode).slice(1),
       deals: defaultCurrency,
     }),
     [mode, defaultCurrency],

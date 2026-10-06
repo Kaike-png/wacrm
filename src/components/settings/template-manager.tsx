@@ -1,5 +1,8 @@
 'use client';
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatMegabytes, getActiveLocaleSettings } from '@/custom/locale/format';
+import { templateLanguageFor } from '@/custom/locale/config';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -85,7 +88,10 @@ interface TemplateFormData {
 const emptyForm: TemplateFormData = {
   name: '',
   category: 'Marketing',
-  language: 'en_US',
+  // FORK-PATCH(P-004): default language follows the tenant locale (pt_BR) — docs/LOCALIZATION.md
+  get language() {
+    return templateLanguageFor(getActiveLocaleSettings().locale);
+  },
   header_format: 'none',
   header_content: '',
   header_media_url: '',
@@ -502,7 +508,7 @@ export function TemplateManager() {
     if (file.size > maxBytes) {
       toast.error(
         t('toastMediaTooLarge', {
-          size: (file.size / 1024 / 1024).toFixed(1),
+          size: formatMegabytes(file.size), // FORK-PATCH(P-004)
           max: Math.round(maxBytes / 1024 / 1024),
         }),
       );

@@ -1,5 +1,7 @@
 "use client"
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDecimal } from '@/custom/locale/format'
 import { Clock } from 'lucide-react'
 import { DOW_SHORT_MON_FIRST } from '@/lib/dashboard/date-utils'
 import type { ResponseTimeSummary } from '@/lib/dashboard/types'
@@ -105,7 +107,7 @@ export function ResponseTimeChart({
             // 'violet' maps to Tailwind's `fill-violet-500` — matches
             // the brand accent the hand-rolled bars used (#7c3aed).
             colors={['violet']}
-            valueFormatter={(value) => `${value.toFixed(1)}m`}
+            valueFormatter={(value) => `${formatDecimal(value, 1)} min`}
             showLegend={false}
             yAxisWidth={48}
             // Compact height so the chart sits well inside the card
@@ -121,6 +123,7 @@ export function ResponseTimeChart({
 function fmt(mins: number | null): string {
   if (mins == null) return '—'
   if (mins < 1) return `${Math.max(1, Math.round(mins * 60))}s`
-  if (mins < 60) return `${mins.toFixed(1)}m`
-  return `${(mins / 60).toFixed(1)}h`
+  // FORK-PATCH(P-004): locale decimal separator ("1,5 min").
+  if (mins < 60) return `${formatDecimal(mins, 1)} min`
+  return `${formatDecimal(mins / 60, 1)} h`
 }

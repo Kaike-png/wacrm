@@ -1,5 +1,7 @@
 "use client"
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDate } from '@/custom/locale/format'
 import Link from 'next/link'
 import { useState } from 'react'
 import {
@@ -165,5 +167,5 @@ function relativeTime(iso: string, t: ReturnType<typeof useTranslations>): strin
   if (diffSec < 3600) return t('timeM', { min: Math.floor(diffSec / 60) })
   if (diffSec < 86400) return t('timeH', { hr: Math.floor(diffSec / 3600) })
   if (diffSec < 2_592_000) return t('timeD', { day: Math.floor(diffSec / 86400) })
-  return new Date(iso).toLocaleDateString()
+  return formatDate(iso, 'medium') // FORK-PATCH(P-004)
 }

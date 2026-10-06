@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatMegabytes } from "@/custom/locale/format";
 import {
   useState,
   useRef,
@@ -392,7 +394,7 @@ export function MessageComposer({
       if (file.size > max) {
         toast.error(
           t("fileTooLarge", {
-            size: (file.size / 1024 / 1024).toFixed(1),
+            size: formatMegabytes(file.size), // FORK-PATCH(P-004)
             kind: t(`mediaKind.${kind}`),
             max: Math.round(max / 1024 / 1024),
           }),

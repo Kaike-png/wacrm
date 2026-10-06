@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatTime } from "@/custom/locale/format";
 import { cn } from "@/lib/utils";
 import type { Message, MessageReaction } from "@/types";
 import {
@@ -12,7 +14,6 @@ import {
   CornerDownLeft,
   Sparkles,
 } from "lucide-react";
-import { format } from "date-fns";
 import { ReplyQuote } from "./reply-quote";
 import { MessageReactions } from "./message-reactions";
 import {
@@ -268,7 +269,7 @@ export function MessageBubble({
   const t = useTranslations("Inbox.bubble");
 
   const isAgent = message.sender_type === "agent" || message.sender_type === "bot";
-  const time = format(new Date(message.created_at), "HH:mm");
+  const time = formatTime(message.created_at); // FORK-PATCH(P-004)
   const failure = isAgent ? failureReason(message) : null;
 
   // Row alignment + width cap are owned by <MessageActions> so its hover

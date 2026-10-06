@@ -9,6 +9,8 @@ import { Header } from "@/components/layout/header";
 import { AccountAccessAlert } from "@/components/layout/account-access-alert";
 import { PresenceHeartbeat } from "@/components/presence/presence-heartbeat";
 import { BrowserNotificationsListener } from "@/components/notifications/browser-notifications-listener";
+// FORK-PATCH(P-004): tenant locale / time zone for every formatter — docs/LOCALIZATION.md
+import { TenantLocaleProvider } from "@/custom/locale/tenant-locale";
 
 // Auth-gated dashboard shell. Extracted from the layout so the layout
 // itself can stay a server component and export metadata (noindex) —
@@ -69,7 +71,10 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <DashboardShellInner>{children}</DashboardShellInner>
+      {/* FORK-PATCH(P-004) */}
+      <TenantLocaleProvider>
+        <DashboardShellInner>{children}</DashboardShellInner>
+      </TenantLocaleProvider>
     </AuthProvider>
   );
 }

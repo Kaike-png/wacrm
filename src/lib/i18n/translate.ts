@@ -1,6 +1,8 @@
 import { createTranslator } from 'next-intl';
 // FORK-PATCH(P-002): layer fork-owned strings — docs/UPSTREAM_STRATEGY.md
 import { withCustomMessages } from '@/custom/i18n/merge';
+// FORK-PATCH(P-004): deploy UI language default — docs/LOCALIZATION.md
+import { DEFAULT_APP_LOCALE } from '@/custom/locale/config';
 
 /**
  * Translator for code that runs outside React — API route handlers,
@@ -18,8 +20,10 @@ type Catalogue = Record<string, unknown>;
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 function loadCatalogue(): { locale: string; messages: Catalogue } {
-  const locale = process.env.NEXT_PUBLIC_APP_LOCALE;
-  if (locale === 'pt') return { locale, messages: require('../../../messages/pt.json') };
+  // FORK-PATCH(P-004): default pt-BR and accept `pt-BR` / `pt_BR` — docs/LOCALIZATION.md.
+  // Literal comparisons on the inlined env keep the unused catalogues out of the bundle.
+  const locale = process.env.NEXT_PUBLIC_APP_LOCALE || DEFAULT_APP_LOCALE;
+  if (locale === 'pt' || locale === 'pt-BR' || locale === 'pt_BR') return { locale: 'pt', messages: require('../../../messages/pt.json') };
   if (locale === 'es') return { locale, messages: require('../../../messages/es.json') };
   if (locale === 'ko') return { locale, messages: require('../../../messages/ko.json') };
   return { locale: 'en', messages: require('../../../messages/en.json') };

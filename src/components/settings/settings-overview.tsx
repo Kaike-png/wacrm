@@ -1,5 +1,7 @@
 'use client';
 
+// FORK-PATCH(P-004): localized mode/theme labels — docs/LOCALIZATION.md
+import { modeLabel, themeName } from '@/custom/i18n/labels';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -148,7 +150,7 @@ export function SettingsOverview({
 
   const currencyLabel =
     CURRENCIES.find((c) => c.code === defaultCurrency)?.label ?? defaultCurrency;
-  const themeName = THEMES.find((t) => t.id === theme)?.name ?? theme;
+  const themeLabel = themeName(theme, THEMES.find((t) => t.id === theme)?.name ?? theme);
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   // Per-tile loading + subtitle. `null` counts render as a graceful
@@ -215,7 +217,7 @@ export function SettingsOverview({
     {
       section: 'appearance',
       loading: false,
-      subtitle: t('appearance', { mode: cap(mode), theme: themeName }),
+      subtitle: t('appearance', { mode: cap(modeLabel(mode)), theme: themeLabel }),
     },
   ];
 

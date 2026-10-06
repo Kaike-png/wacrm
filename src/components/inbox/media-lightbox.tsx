@@ -1,7 +1,8 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDateTime } from "@/custom/locale/format";
 import { useCallback, useEffect, useState } from "react";
-import { format } from "date-fns";
 import {
   ChevronLeft,
   ChevronRight,
@@ -116,7 +117,7 @@ export function MediaLightbox({
   if (!item) return null;
 
   const authorLabel = item.fromCustomer ? contactLabel : t("you");
-  const timestamp = format(new Date(item.createdAt), "MMM d, yyyy HH:mm");
+  const timestamp = formatDateTime(item.createdAt, "medium"); // FORK-PATCH(P-004)
 
   return (
     <Dialog

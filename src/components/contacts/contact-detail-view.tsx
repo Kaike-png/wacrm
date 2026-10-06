@@ -1,5 +1,7 @@
 'use client';
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDateTime } from '@/custom/locale/format';
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { addContactTag, deleteContactTag } from '@/lib/contacts/tag-api';
@@ -639,13 +641,7 @@ export function ContactDetailView({
                           </button>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1.5">
-                          {new Date(note.created_at).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatDateTime(note.created_at, 'medium')}
                         </p>
                       </div>
                     ))

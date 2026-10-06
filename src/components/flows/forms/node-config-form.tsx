@@ -24,6 +24,10 @@
  * renders the advanced rows.
  */
 
+// FORK-PATCH(P-004): contact field names in the condition picker (values stay the column keys)
+import { getT } from "@/lib/i18n/translate";
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatMegabytes } from "@/custom/locale/format";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Loader2,
@@ -49,6 +53,8 @@ import { cn } from "@/lib/utils";
 import { uploadAccountMedia, MEDIA_MAX_BYTES } from "@/lib/storage/upload-media";
 import { slugify, type BuilderNode } from "../shared";
 import { NextNodeRow, NodeKeySelect, TextRow } from "./fields";
+
+const tContactField = getT("Custom.flows.contactFields"); // FORK-PATCH(P-004)
 
 interface NodeConfigFormProps {
   node: BuilderNode;
@@ -677,10 +683,10 @@ function ConditionForm({
                 <SelectValue placeholder={t("pickField")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name">name</SelectItem>
-                <SelectItem value="email">email</SelectItem>
-                <SelectItem value="phone">phone</SelectItem>
-                <SelectItem value="company">company</SelectItem>
+                <SelectItem value="name">{tContactField("name")}</SelectItem>
+                <SelectItem value="email">{tContactField("email")}</SelectItem>
+                <SelectItem value="phone">{tContactField("phone")}</SelectItem>
+                <SelectItem value="company">{tContactField("company")}</SelectItem>
               </SelectContent>
             </Select>
           ) : (
@@ -914,7 +920,7 @@ function SendMediaForm({
     async (file: File) => {
       if (file.size > MEDIA_MAX_BYTES) {
         toast.error(
-          t("fileTooLarge", { size: (file.size / 1024 / 1024).toFixed(1) }),
+          t("fileTooLarge", { size: formatMegabytes(file.size) }), // FORK-PATCH(P-004)
         );
         return;
       }

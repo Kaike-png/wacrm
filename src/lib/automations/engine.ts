@@ -25,6 +25,10 @@ import { engineSendText, engineSendTemplate, engineSendInteractive } from './met
 import { validateInteractivePayload } from '@/lib/whatsapp/interactive'
 import { isDeliverableUrl } from '@/lib/webhooks/ssrf'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-004): tenant time zone for time_of_day — docs/LOCALIZATION.md
+import { minutesOfDay } from '@/custom/locale/format'
+import { getAccountLocaleSettings } from '@/custom/locale/server'
+import { regionalDefaults } from '@/custom/locale/config'
 
 /** Step errors land in automation_logs and are shown on the logs page. */
 const tErr = getT('LibErrors.engine')
@@ -608,7 +612,7 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
         contact_id: args.contactId,
         title: interpolate(cfg.title, args),
         value: cfg.value ?? 0,
-        currency: acct?.default_currency ?? 'USD',
+        currency: acct?.default_currency ?? regionalDefaults.currency, // FORK-PATCH(P-004)
         status: 'open',
       })
       return 'deal created'
@@ -813,8 +817,12 @@ async function evaluateCondition(cfg: ConditionStepConfig, args: ExecuteArgs): P
       // (supports over-midnight ranges like "18:00-09:00").
       const [from, to] = (cfg.operand ?? '').split('-')
       if (!from || !to) return false
-      const now = new Date()
-      const mins = now.getHours() * 60 + now.getMinutes()
+      // FORK-PATCH(P-004): the window is in the tenant's time zone
+      // (accounts.timezone), not the server's (UTC in Docker).
+      const mins = minutesOfDay(
+        new Date(),
+        await getAccountLocaleSettings(db, args.automation.account_id),
+      )
       const parse = (s: string) => {
         const [h, m] = s.split(':').map(Number)
         return (h || 0) * 60 + (m || 0)

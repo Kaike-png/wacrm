@@ -3,6 +3,9 @@
  * tag-column handling stays aligned with phone/name/email/company.
  */
 
+// FORK-PATCH(P-004): `;`-separated / Portuguese-header CSVs — docs/LOCALIZATION.md
+import { normalizeCsvText } from '@/custom/locale/csv';
+
 export interface ParsedContactRow {
   phone: string;
   name?: string;
@@ -47,7 +50,8 @@ export interface ParseContactCsvResult {
 }
 
 export function parseContactCsv(text: string): ParseContactCsvResult {
-  const lines = text.trim().split(/\r?\n/);
+  // FORK-PATCH(P-004): normalize `;` / Portuguese-header CSVs first.
+  const lines = normalizeCsvText(text).trim().split(/\r?\n/);
   if (lines.length < 2) {
     return {
       rows: [],

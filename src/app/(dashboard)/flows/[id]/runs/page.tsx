@@ -1,5 +1,7 @@
 "use client";
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatDateTime, formatTime, formatDuration } from "@/custom/locale/format";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -15,7 +17,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { format, formatDistanceToNow } from "date-fns";
 
 import { useTranslations } from "next-intl";
 
@@ -222,10 +223,12 @@ function RunCard({
   const StatusIcon = meta.icon;
   const contactLabel =
     run.contact?.name?.trim() || run.contact?.phone || t("unknownContact");
+  // FORK-PATCH(P-004): "ran for" is ended − started (upstream showed the
+  // time since the run ended), localized.
   const duration = run.ended_at
-    ? formatDistanceToNow(new Date(run.ended_at), {
-        addSuffix: false,
-      })
+    ? formatDuration(
+        new Date(run.ended_at).getTime() - new Date(run.started_at).getTime(),
+      )
     : null;
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -267,7 +270,7 @@ function RunCard({
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-            <span>{t("started", { time: format(new Date(run.started_at), "PP p") })}</span>
+            <span>{t("started", { time: formatDateTime(run.started_at, "medium") })}</span>
             {run.reprompt_count > 0 && (
               <span>· {t("reprompts", { count: run.reprompt_count })}</span>
             )}
@@ -319,7 +322,7 @@ function EventLine({ ev }: { ev: EventRow }) {
   return (
     <div className="flex items-start gap-2 rounded-md px-2 py-1 text-xs">
       <span className="w-32 shrink-0 text-[10px] text-muted-foreground">
-        {format(new Date(ev.created_at), "HH:mm:ss")}
+        {formatTime(ev.created_at, { seconds: true })}
       </span>
       <span className={cn("w-32 shrink-0 font-mono text-[10px]", cls)}>
         {ev.event_type}

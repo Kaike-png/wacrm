@@ -1,5 +1,7 @@
 'use client';
 
+// FORK-PATCH(P-004): tenant locale/time zone formatting — docs/LOCALIZATION.md
+import { formatNumber } from '@/custom/locale/format';
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { parseBroadcastCsv } from '@/lib/broadcast-csv';
@@ -18,6 +20,8 @@ import {
   X,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+// FORK-PATCH(P-004): decode Excel pt-BR CSVs (Windows-1252) — docs/LOCALIZATION.md
+import { readCsvFile } from '@/custom/locale/csv';
 
 type AudienceType = 'all' | 'tags' | 'custom_field' | 'csv';
 type CustomFieldOperator = 'is' | 'is_not' | 'contains';
@@ -230,7 +234,7 @@ export function Step2SelectAudience({
     const selected = e.target.files?.[0];
     if (!selected) return;
 
-    const result = parseBroadcastCsv(await selected.text());
+    const result = parseBroadcastCsv(await readCsvFile(selected)); // FORK-PATCH(P-004)
 
     if (!result.ok) {
       toast.error(
@@ -528,7 +532,7 @@ export function Step2SelectAudience({
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
             <span className="text-sm text-foreground">
-              {estimatedCount.toLocaleString()}
+              {formatNumber(estimatedCount)}
             </span>
             <span className="text-xs text-muted-foreground">{t('selectAudience.estimatedRecipients')}</span>
           </div>

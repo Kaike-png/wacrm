@@ -3,6 +3,8 @@ import { MEDIA_HEADER_SPECS, isMediaHeaderKind } from '@/lib/whatsapp/media-head
 import type { TemplatePayload } from '@/lib/whatsapp/template-validators'
 import { isDeliverableUrl } from '@/lib/webhooks/ssrf'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-004): locale decimal separator in the size — docs/LOCALIZATION.md
+import { formatMegabytes } from '@/custom/locale/format'
 
 /**
  * Meta requires an `example.header_handle` (from the Resumable Upload
@@ -82,7 +84,7 @@ export async function ensureMediaHeaderHandle(
     throw new Error(
       t('headerTooLarge', {
         kind,
-        size: (bytes.byteLength / 1024 / 1024).toFixed(1),
+        size: formatMegabytes(bytes.byteLength), // FORK-PATCH(P-004)
         max: spec.maxBytes / 1024 / 1024,
       }),
     )

@@ -1,0 +1,838 @@
+{
+  "AccountAccess": {
+    "errorBody": "Não foi possível carregar a função da sua conta, por isso tudo fica em modo somente leitura e as alterações não serão salvas. Verifique sua conexão e tente novamente.",
+    "unlinkedBody": "Nada do que você alterar será salvo enquanto isso não for resolvido — o banco de dados rejeita qualquer gravação de um usuário sem conta ou função. Se você recebeu um convite para uma equipe, peça ao proprietário que reenvie o convite. Em uma instalação própria (self-hosted), verifique se a migração de criação inicial da conta (account-bootstrap) foi executada para este usuário."
+  },
+  "Agents": {
+    "description": "Seu agente de IA com sua própria chave de API — configure e teste na área de testes antes que ele responda aos clientes na caixa de entrada.",
+    "playground": {
+      "emptyDesc": "Ele usa sua base de conhecimento e se comporta exatamente como na resposta automática — inclusive ao transferir para um atendente.",
+      "handoff": "Aqui a conversa seria transferida para um atendente",
+      "notConfigured": "Nenhum agente configurado ainda — conclua a configuração primeiro.",
+      "placeholder": "Digite uma mensagem como se fosse o cliente…",
+      "title": "Área de testes",
+      "unreachable": "Não foi possível se conectar ao agente."
+    },
+    "tabPlayground": "Área de testes",
+    "usage": {
+      "description": "Tokens consumidos na chave do seu provedor pelos rascunhos e pelas respostas automáticas. Apenas contagens — nenhum conteúdo de mensagem é armazenado aqui.",
+      "empty": "Ainda não há uso de IA nos últimos {days} dias.",
+      "emptyHint": "Os dados aparecem aqui conforme o assistente gera rascunhos e respostas automáticas.",
+      "loadFailed": "Não foi possível carregar o uso",
+      "partialWindow": "Exibindo um período parcial — o volume de uso é alto, então apenas os registros mais recentes estão resumidos aqui."
+    }
+  },
+  "Api": {
+    "account": {
+      "apiKeys": {
+        "createFailed": "Não foi possível criar a chave de API",
+        "loadFailed": "Não foi possível carregar as chaves de API",
+        "revokeFailed": "Não foi possível revogar a chave de API",
+        "scopesInvalid": "O campo scopes deve ser uma lista de escopos válidos"
+      },
+      "invitations": {
+        "createFailed": "Não foi possível criar o convite",
+        "loadFailed": "Não foi possível carregar os convites",
+        "revokeFailed": "Não foi possível revogar o convite",
+        "roleInvalid": "O campo role deve ser admin, agent ou viewer"
+      },
+      "members": {
+        "loadFailed": "Não foi possível carregar os membros",
+        "roleInvalid": "O campo role deve ser owner, admin, agent ou viewer",
+        "updateFailed": "Não foi possível atualizar o membro"
+      },
+      "transferFailed": "Não foi possível transferir a propriedade da conta",
+      "updateFailed": "Não foi possível atualizar a conta"
+    },
+    "ai": {
+      "deleteConfigFailed": "Não foi possível excluir a configuração de IA",
+      "handoffNotMember": "O atendente de transferência (handoff_agent_id) deve ser membro desta conta",
+      "knowledge": {
+        "deleteDocFailed": "Não foi possível excluir o documento",
+        "indexingFailed": "a indexação falhou",
+        "loadDocFailed": "Não foi possível carregar o documento",
+        "loadDocsFailed": "Não foi possível carregar os documentos",
+        "loadKbFailed": "Não foi possível carregar a base de conhecimento",
+        "reindexPartial": "{reindexed} documento(s) reindexado(s) até ocorrer um erro: {message}",
+        "saveDocFailed": "Não foi possível salvar o documento",
+        "updateDocFailed": "Não foi possível atualizar o documento"
+      },
+      "loadConfigFailed": "Não foi possível carregar a configuração de IA",
+      "loadUsageFailed": "Não foi possível carregar o consumo",
+      "noAgentConfigured": "Nenhum agente de IA configurado ainda. Adicione a chave do seu provedor em Configuração.",
+      "pausedRequired": "O campo paused (booleano) é obrigatório",
+      "saveConfigFailed": "Não foi possível salvar a configuração de IA",
+      "updateConversationFailed": "Não foi possível atualizar a conversa"
+    },
+    "automations": {
+      "copyFailed": "não foi possível duplicar",
+      "nameTriggerRequired": "Nome (name) e gatilho (trigger_type) são obrigatórios"
+    },
+    "broadcast": {
+      "alreadyRunning": "Já há um envio em andamento para esta campanha. Aguarde a conclusão antes de retomar.",
+      "templateMalformed": "O registro local do modelo está corrompido — use \"Sincronizar da Meta\" em Configurações para corrigi-lo antes de enviar a campanha.",
+      "templateNameRequired": "O campo template_name é obrigatório"
+    },
+    "common": {
+      "failedToLoadConversation": "Não foi possível carregar a conversa",
+      "insertFailed": "não foi possível salvar o registro",
+      "wabaIdMissing": "ID da conta do WhatsApp Business (WABA) ausente. Reconecte sua conta em Configurações."
+    },
+    "flows": {
+      "insertFailed": "não foi possível criar o fluxo",
+      "unknownTemplate": "Modelo de fluxo desconhecido (template_slug): \"{slug}\""
+    },
+    "invitations": {
+      "redeemFailed": "Não foi possível aceitar o convite"
+    },
+    "media": {
+      "fetchFailed": "Não foi possível carregar a mídia"
+    },
+    "quickReplies": {
+      "contentTextRequired": "O campo content_text é obrigatório para respostas rápidas de texto",
+      "kindInvalid": "O tipo (kind) deve ser \"text\" ou \"interactive\""
+    },
+    "react": {
+      "dbDeleteFailed": "Reação enviada à Meta, mas não foi possível removê-la do banco de dados",
+      "dbUpsertFailed": "Reação enviada à Meta, mas não foi possível salvá-la no banco de dados"
+    },
+    "send": {
+      "openConversationFailed": "Não foi possível abrir uma conversa com este contato"
+    },
+    "templates": {
+      "authNotEditable": "Modelos da categoria AUTHENTICATION não podem ser editados aqui — gerencie-os no Gerenciador do WhatsApp da Meta.",
+      "authNotSupported": "Modelos da categoria AUTHENTICATION ainda não podem ser criados aqui — crie-os no Gerenciador do WhatsApp da Meta e use \"Sincronizar da Meta\".",
+      "deleteFailed": "Não foi possível excluir o modelo.",
+      "deletedLocalFailed": "Excluído na Meta, mas não foi possível excluir localmente: {message}.",
+      "editFailed": "Não foi possível editar o modelo.",
+      "editedSaveFailed": "Editado na Meta, mas não foi possível salvar localmente: {message}. Use \"Sincronizar da Meta\" para recuperar.",
+      "headerUploadFailed": "Não foi possível enviar a mídia do cabeçalho.",
+      "metaDeleteFailed": "Não foi possível excluir o modelo na Meta.",
+      "metaEditFailed": "Não foi possível editar o modelo na Meta.",
+      "metaSubmitFailed": "Não foi possível enviar o modelo à Meta.",
+      "submitFailed": "Não foi possível enviar o modelo.",
+      "submittedSaveFailed": "Enviado à Meta, mas não foi possível salvar localmente: {message}. Use \"Sincronizar da Meta\" para recuperar.",
+      "syncFailed": "Não foi possível sincronizar os modelos"
+    },
+    "whatsappConfig": {
+      "deleteFailed": "Não foi possível excluir a configuração",
+      "encryptFailed": "Não foi possível criptografar o token. Verifique se a ENCRYPTION_KEY é uma string hexadecimal válida de 64 caracteres nas suas variáveis de ambiente.",
+      "fetchFailed": "Não foi possível carregar a configuração",
+      "noWabaId": "Nenhum WABA ID registrado — não é possível configurar os webhooks sem ele. Adicione-o no formulário e salve novamente.",
+      "phoneCheckFailed": "Não foi possível verificar os dados do número: {message}",
+      "saveFailed": "Não foi possível salvar a configuração",
+      "tokenCorrupted": "Não é possível descriptografar o token de acesso salvo com a ENCRYPTION_KEY atual. Isso geralmente significa que a chave mudou ou é diferente entre ambientes (local vs Hostinger vs Vercel). Clique em \"Redefinir configuração\" abaixo e salve novamente.",
+      "updateFailed": "Não foi possível atualizar a configuração",
+      "validateFailed": "Não foi possível validar a configuração",
+      "wabaCheckFailed": "Não foi possível verificar a inscrição do WABA: {message}",
+      "wabaNoApps": "O WABA não tem apps inscritos. Salve a configuração novamente para fazer a inscrição."
+    }
+  },
+  "Automations": {
+    "builder": {
+      "addStep": "Adicionar passo",
+      "agents": {
+        "placeholder": "ID do atendente",
+        "select": "Selecione um atendente…",
+        "unknown": "{id} (atendente desconhecido)"
+      },
+      "config": {
+        "agentLabel": "Atendente",
+        "bodyTemplateLabel": "Corpo da requisição",
+        "closeConversationHint": "Define o status da conversa como \"encerrada\". Não precisa de configuração.",
+        "matchWordHint": "Só reconhece a palavra-chave como palavra isolada: \"oi\" deixa de acionar a automação em \"boi\". Ideal para palavras-chave curtas em idiomas que separam as palavras com espaços; use Contém para idiomas escritos sem espaços.",
+        "modes": {
+          "specific": "Atendente específico"
+        },
+        "operandLabel": "Valor",
+        "placeholderTag": "ID da tag",
+        "subjectLabel": "Critério"
+      },
+      "pipelines": {
+        "pipelineIdLabel": "ID do funil",
+        "pipelineLabel": "Funil",
+        "selectPipeline": "Selecione um funil…",
+        "selectPipelineFirst": "Selecione um funil primeiro…",
+        "unknownPipeline": "{id} (funil desconhecido)"
+      },
+      "replyIdsHelp": "IDs de botão/item de lista separados por vírgula (correspondência exata). Use os mesmos IDs definidos em um passo Enviar botões / Enviar lista.",
+      "steps": {
+        "close_conversation": "Encerrar conversa"
+      },
+      "toasts": {
+        "saveFailed": "Não foi possível salvar"
+      },
+      "triggers": {
+        "conversation_assigned": {
+          "hint": "Quando a conversa é atribuída a um atendente"
+        },
+        "interactive_reply": {
+          "hint": "O cliente toca em um botão ou item de lista com o ID correspondente — encadeie menus entre automações"
+        },
+        "time_based": {
+          "hint": "Em uma programação recorrente"
+        }
+      }
+    },
+    "edit": {
+      "loadError": "Não foi possível carregar ({status})"
+    },
+    "list": {
+      "deleteDesc": "A automação {name} e o histórico de execuções dela serão excluídos permanentemente. Essa ação não pode ser desfeita.",
+      "emptyDesc": "Escolha um modelo acima ou crie uma automação do zero.",
+      "lastRun": "última execução: {time}",
+      "loadFailed": "Não foi possível carregar as automações",
+      "subtitle": "Configure regras que reagem automaticamente a eventos do WhatsApp®.",
+      "templatesTitle": "Modelos prontos",
+      "toasts": {
+        "deleteError": "Não foi possível excluir",
+        "duplicateError": "Não foi possível duplicar",
+        "updateError": "Não foi possível atualizar"
+      },
+      "viewLogs": "Ver histórico"
+    },
+    "logs": {
+      "loadError": "Não foi possível carregar o histórico",
+      "noSteps": "Nenhum passo registrado.",
+      "step": "{count} passo",
+      "stepPlural": "{count} passos",
+      "title": "Histórico de execuções"
+    },
+    "relative": {
+      "minutesAgo": "há {n} min"
+    }
+  },
+  "Broadcasts": {
+    "detail": {
+      "backToBroadcasts": "Voltar para campanhas",
+      "cannotDeleteSending": "Não é possível excluir a campanha enquanto o envio está em andamento",
+      "createdAt": "Criada em {date}",
+      "deleteHover": "Excluir esta campanha",
+      "deletePrompt": "Excluir esta campanha?",
+      "funnel": "Funil de entrega",
+      "notFound": "Campanha não encontrada",
+      "resumeHint": "O envio falhou para {count, plural, =1 {# destinatário. Ao tentar novamente, o servidor reenvia a mensagem para ele} other {# destinatários. Ao tentar novamente, o servidor reenvia as mensagens para eles}}.",
+      "resumeStalledHint": "{count, plural, =1 {# destinatário ainda não recebeu} other {# destinatários ainda não receberam}} a mensagem — a aba do navegador que executava esta campanha foi fechada antes do fim. Ao retomar, o servidor conclui o envio.",
+      "retryFailed": "Reenviar os que falharam ({count})",
+      "toastDeleted": "Campanha excluída",
+      "toastFailedDelete": "Não foi possível excluir: {error}",
+      "toastResumeStartedCapped": "Enviando para {count, plural, =1 {# destinatário} other {# destinatários}} em segundo plano. Outros {remaining} precisarão de um novo envio.",
+      "toastResumeStarted": "Enviando para {count, plural, =1 {# destinatário} other {# destinatários}} em segundo plano."
+    },
+    "new": {
+      "broadcastFailed": "Não foi possível enviar a campanha",
+      "subtitle": "Crie e envie uma campanha para seus contatos.",
+      "title": "Nova campanha",
+      "toastFailedDraft": "Não foi possível salvar o rascunho: {error}",
+      "toastGiveName": "Dê um nome à campanha antes de salvar o rascunho.",
+      "toastNotSignedIn": "Você precisa entrar na sua conta."
+    },
+    "page": {
+      "broadcastInProgress": "Campanha em andamento",
+      "createFirst": "Crie sua primeira campanha para falar com muitos contatos de uma só vez.",
+      "errorLoad": "Não foi possível carregar as campanhas",
+      "newBroadcast": "Nova campanha",
+      "noBroadcastsYet": "Nenhuma campanha ainda",
+      "title": "Campanhas"
+    },
+    "sending": {
+      "apiRequestFailed": "Falha na requisição à API de campanhas",
+      "createBroadcastFailed": "Não foi possível criar a campanha: {error}",
+      "createCsvContactsFailed": "Não foi possível criar os contatos do CSV: {error}",
+      "customFieldFilterFailed": "Não foi possível aplicar o filtro de campo personalizado: {error}",
+      "fetchContactTagsFailed": "Não foi possível carregar as tags dos contatos: {error}",
+      "fetchContactsFailed": "Não foi possível carregar os contatos: {error}",
+      "fetchRecipientsFailed": "Não foi possível carregar os destinatários da campanha",
+      "insertRecipientBatchFailed": "Não foi possível adicionar o lote {batch} de destinatários: {error}",
+      "lookupCsvContactsFailed": "Não foi possível consultar os contatos do CSV: {error}",
+      "notSignedIn": "Você precisa entrar na sua conta."
+    },
+    "status": {
+      "failed": "Com falha",
+      "scheduled": "Agendada",
+      "sent": "Enviada"
+    },
+    "wizard": {
+      "chooseTemplate": {
+        "errorLoad": "Não foi possível carregar os modelos",
+        "subtitle": "Selecione um modelo de mensagem aprovado para a sua campanha."
+      },
+      "personalize": {
+        "unmappedWarning": "Associe todas as variáveis antes de continuar — ainda faltam <mono>{keys}</mono>. Caso contrário, elas serão enviadas à Meta em branco."
+      },
+      "scheduleSend": {
+        "audienceCsv": "Arquivo CSV",
+        "broadcastName": "Nome da campanha",
+        "confirmDesc": "Você está prestes a enviar esta campanha para <b>{count, number}</b> {count, plural, =1 {contato} other {contatos}} usando o modelo <b>{template}</b>. Esta ação não pode ser desfeita.",
+        "confirmTitle": "Confirmar envio",
+        "sendNow": "Enviar campanha",
+        "subtitle": "Dê um nome à sua campanha e confirme o envio.",
+        "toastFailedPreview": "Não foi possível carregar os dados da pré-visualização"
+      },
+      "selectAudience": {
+        "allDesc": "Enviar para todos os {count} contatos da sua base.",
+        "allDescLoading": "Enviar para todos os contatos da sua base.",
+        "csvDesc": "Envie um CSV com números de telefone (nomes são opcionais).",
+        "errorLoadFields": "Não foi possível carregar os campos personalizados",
+        "errorLoadTags": "Não foi possível carregar as tags",
+        "subtitle": "Escolha quem receberá esta campanha.",
+        "csvFormatDesc": "Deve conter uma coluna “phone” ou “telefone” (formato internacional, ex.: +5511987654321). A coluna “name” (“nome”) é opcional.",
+        "errorCsvMissingPhone": "O CSV deve ter uma coluna “phone” ou “telefone”."
+      }
+    }
+  },
+  "Contacts": {
+    "customFields": {
+      "toastCreated": "Campo \"{name}\" criado.",
+      "toastDeleted": "Campo \"{name}\" excluído."
+    },
+    "detailView": {
+      "activityTab": {
+        "title": "Histórico de atividades"
+      },
+      "notesTab": {
+        "noNotes": "Nenhuma anotação ainda.",
+        "placeholder": "Escreva uma anotação...",
+        "save": "Adicionar anotação",
+        "title": "Anotações internas"
+      },
+      "tabs": {
+        "addNotePlaceholder": "Adicionar uma anotação...",
+        "notes": "Anotações"
+      },
+      "toastCustomFieldsFailed": "Não foi possível salvar os campos personalizados",
+      "toastNotAuthenticated": "Você precisa entrar na sua conta",
+      "toastNoteAddFailed": "Não foi possível adicionar a anotação",
+      "toastNoteAdded": "Anotação adicionada",
+      "toastNoteDeleteFailed": "Não foi possível excluir a anotação",
+      "toastNoteDeleted": "Anotação excluída",
+      "toastTemplateFailed": "Não foi possível enviar o modelo: {reason}",
+      "toastUpdateFailed": "Não foi possível atualizar o contato"
+    },
+    "form": {
+      "notAuthenticated": "Você precisa entrar na sua conta",
+      "toastError": "Não foi possível salvar o contato",
+      "toastSuccessAdd": "Contato criado",
+      "toastSuccessEdit": "Contato atualizado"
+    },
+    "importModal": {
+      "moreRows": "+ {count} outra linha não exibida",
+      "moreRows_plural": "+ {count} outras linhas não exibidas",
+      "notAuthenticated": "Você precisa entrar na sua conta",
+      "preview": "Pré-visualização · linhas iniciais: {count}",
+      "toastError": "Não foi possível importar os contatos",
+      "toastInvalidPhone": "{count} contato sem número de telefone válido",
+      "toastInvalidPhone_plural": "{count} contatos sem número de telefone válido",
+      "toastTagsSkippedMore": " (+{count} outras)",
+      "toastTagsWarning": "Contatos importados, mas não foi possível atribuir algumas tags.",
+      "desc": "Envie um CSV com uma coluna <phoneCode>phone</phoneCode> (ou “telefone”) obrigatória. Opcionais: <nameCode>name</nameCode> (“nome”), <emailCode>email</emailCode> (“e-mail”), <companyCode>company</companyCode> (“empresa”), <tagsCode>tags</tagsCode> (separadas por vírgula; coloque células com várias tags entre aspas). Arquivos do Excel separados por ponto e vírgula também funcionam.",
+      "toastNoValidRows": "Nenhuma linha válida encontrada. Verifique se o CSV tem uma coluna “phone” ou “telefone”.",
+      "previewTags": "Tags: {tags} · contatos: {contacts}",
+      "previewTags_plural": "Tags: {tags} · contatos: {contacts}",
+      "resultImported": "{count, plural, =1 {# importado} other {# importados}}",
+      "resultSkipped": "{count, plural, =1 {# ignorado} other {# ignorados}}"
+    },
+    "page": {
+      "toastBulkFailedDelete": "Não foi possível excluir os contatos",
+      "toastFailedDelete": "Não foi possível excluir o contato",
+      "toastFailedLoad": "Não foi possível carregar os contatos",
+      "subtitle": "Gerencie sua lista de contatos. {count, plural, =1 {# contato no total} other {# contatos no total}}.",
+      "selectedCount": "{count, plural, =1 {# selecionado} other {# selecionados}}",
+      "toastBulkDeleted": "{count, plural, =1 {# contato excluído} other {# contatos excluídos}}"
+    }
+  },
+  "Currency": {
+    "AED": "Dirham dos Emirados"
+  },
+  "Dashboard": {
+    "activityFeed": {
+      "items": {
+        "broadcastSent": "Campanha \"{name}\" enviada para {count} contatos",
+        "broadcastStatus": "Campanha \"{name}\" {status} ({count} destinatários)",
+        "broadcastStatusNames": {
+          "scheduled": "agendada",
+          "sent": "enviada"
+        }
+      },
+      "noActivityHint": "As atividades de mensagens, negócios, campanhas e automações aparecerão aqui.",
+      "timeM": "há {min} min"
+    },
+    "page": {
+      "description": "Métricas em tempo real de conversas, contatos, negócios, campanhas e automações.",
+      "newTodayVsYesterday": "hoje vs. ontem"
+    },
+    "pipelineDonut": {
+      "ariaLabel": "Valor do funil por etapa",
+      "noOpenDealsHint": "Crie negócios em Funis para ver a divisão por etapa aqui.",
+      "title": "Valor do funil"
+    },
+    "quickActions": {
+      "newBroadcast": "Nova campanha"
+    },
+    "responseTimeChart": {
+      "target": "meta: {minutes} min"
+    },
+    "conversationsChart": {
+      "tooltipIncoming": "{count, plural, =1 {# recebida} other {# recebidas}}",
+      "tooltipOutgoing": "{count, plural, =1 {# enviada} other {# enviadas}}"
+    }
+  },
+  "Flows": {
+    "builder": {
+      "addNode": "Adicionar bloco",
+      "canvasView": "Quadro",
+      "deleteNode": "Excluir bloco",
+      "entryNodePlaceholder": "Escolha o primeiro bloco…",
+      "entryNodeTitle": "Bloco de entrada:",
+      "form": {
+        "buttonLabel": "Texto do botão que abre a lista (≤20 caracteres)",
+        "buttonsHelp": "Botões (1–3) — cada um leva a um bloco seguinte diferente",
+        "endNodeHelp": "Bloco final. Quando a execução chega a este bloco, ela é marcada como concluída. Não precisa de configuração.",
+        "internalNote": "Anotação interna (para o atendente que assumir)",
+        "nextNodePlaceholder": "Próximo bloco…",
+        "pickNextNode": "Escolha o próximo bloco…",
+        "rowTitlePlaceholder": "Título da linha (≤24 caracteres)",
+        "uploadFailed": "Não foi possível enviar o arquivo.",
+        "varKeyHelp": "Use nas perguntas seguintes e nas anotações de transferência com",
+        "varKeyLabel": "Chave da variável (armazenada em flow_runs.vars; apenas letras, números e _)"
+      },
+      "hideAdvanced": "Ocultar opções avançadas",
+      "noNodeDesc": "Selecione um bloco no quadro para editar a configuração.",
+      "noNodeSelected": "Nenhum bloco selecionado",
+      "noNodesYet": "Nenhum bloco ainda.",
+      "nodeKeyLabel": "Chave do bloco (identificador interno — evite alterar para não afetar as análises)",
+      "nodes": {
+        "handoff": {
+          "blurb": "Transfere a conversa para um atendente",
+          "label": "Transferir para atendente"
+        },
+        "send_list": {
+          "blurb": "Envia uma lista de opções para o cliente escolher"
+        },
+        "set_tag": {
+          "label": "Alterar tags do contato"
+        }
+      },
+      "nodesEmpty": "Adicione um bloco <strong>Início</strong>, depois um bloco <strong>Enviar botões</strong> e, por fim, um bloco <strong>Transferir para atendente</strong> — esse é o formato básico de um menu de boas-vindas.",
+      "nodesTitle": "Blocos ({count})",
+      "removeNode": "Remover bloco",
+      "replyIdsHint": "Os IDs de resposta de cada opção aparecem acima. O WhatsApp os envia quando o cliente toca em uma opção; normalmente você não precisa alterá-los.",
+      "setAsEntry": "Definir como bloco inicial",
+      "showAdvanced": "Mostrar opções avançadas"
+    },
+    "editorState": {
+      "deleteConfirm": "Excluir \"{name}\"? Todas as execuções em andamento serão encerradas imediatamente. Esta ação não pode ser desfeita.",
+      "deleteFailed": "Não foi possível excluir",
+      "deleteFailedStatus": "Não foi possível excluir: {status}",
+      "saveFailed": "Não foi possível salvar",
+      "saveFailedStatus": "Não foi possível salvar: {status}",
+      "statusUpdateFailed": "Não foi possível atualizar o status",
+      "statusUpdateFailedStatus": "Não foi possível atualizar o status: {status}"
+    },
+    "header": {
+      "unsavedHint": "Alterações não salvas — clique em Salvar para não perdê-las"
+    },
+    "list": {
+      "cloneError": "Não foi possível duplicar o fluxo",
+      "cloneFailedStatus": "Não foi possível duplicar o fluxo: {status}",
+      "createFirst": "Criar seu primeiro fluxo",
+      "createTitle": "Criar novo fluxo",
+      "deleteConfirm": "Excluir \"{name}\"? Todas as execuções em andamento serão encerradas imediatamente.",
+      "description": "Crie conversas no WhatsApp com botões e caminhos diferentes para cada resposta. Ideal para menus, perguntas frequentes e triagem antes de um atendente assumir.",
+      "emptyDesc": "Crie sua primeira conversa: um menu de boas-vindas, uma consulta de pedido, um bot de perguntas frequentes. O cliente toca nos botões e o bot leva até a resposta certa (ou ao atendente certo).",
+      "nodeCount": "{count} {count, plural, =1 {bloco} other {blocos}}"
+    },
+    "logs": {
+      "description": "As 50 execuções mais recentes deste fluxo. Expanda uma linha para ver o registro de cada passo.",
+      "emptyState": "Nenhuma execução ainda. Acione o fluxo a partir de um número de WhatsApp pessoal e ela aparecerá aqui.",
+      "reprompts": "{count} perguntas repetidas",
+      "statusPaused": "Pausada pelo atendente"
+    },
+    "summary": {
+      "opMissing": "não existe"
+    },
+    "validation": {
+      "jumpToNode": "Ir para o bloco {key}"
+    }
+  },
+  "ForgotPasswordPage": {
+    "desc": "Informe seu e-mail e enviaremos um link para redefinir sua senha"
+  },
+  "GatedButton": {
+    "reasons": {
+      "createBroadcasts": "criar campanhas",
+      "createPipelines": "criar funis"
+    }
+  },
+  "Header": {
+    "broadcasts": "Campanhas",
+    "defaultAvatar": "Foto",
+    "pipelines": "Funis"
+  },
+  "Inbox": {
+    "actions": {
+      "copyFailed": "Não foi possível copiar"
+    },
+    "composer": {
+      "quickReplySaved": "Resposta rápida salva.",
+      "readOnlyPlaceholder": "Somente leitura — com seu perfil, você pode ver as conversas, mas não responder",
+      "readOnlyTitle": "Somente leitura — seu perfil não permite enviar mensagens",
+      "recordingTooLong": "A gravação ficou muito grande (mais de 16 MB).",
+      "recordingUnsupported": "Este navegador não é compatível com gravação de voz.",
+      "sessionExpiredHint": "A janela de 24 horas expirou. Use um modelo para retomar o contato.",
+      "sessionExpiredPlaceholder": "Janela de 24 horas expirada — use um modelo",
+      "uploadFailed": "Não foi possível enviar o arquivo."
+    },
+    "conversationList": {
+      "filterClosed": "Encerradas"
+    },
+    "messageThread": {
+      "assignmentUpdateFailed": "Não foi possível atualizar o responsável",
+      "noTeammates": "Nenhum membro da equipe disponível",
+      "reactionFailed": "Não foi possível reagir: {reason}",
+      "sendFailed": "Não foi possível enviar: {reason}",
+      "sendTemplateFailed": "Não foi possível enviar o modelo: {reason}",
+      "statusClosed": "Encerrada",
+      "unassign": "Remover responsável",
+      "waitForSending": "Aguarde o envio da mensagem ser concluído"
+    },
+    "sidebar": {
+      "addNotePlaceholder": "Adicionar uma anotação...",
+      "notes": "Anotações"
+    },
+    "templatePicker": {
+      "fillPlaceholders": "Preencha as variáveis para montar a mensagem deste modelo. A Meta exige que todas as variáveis sejam preenchidas."
+    },
+    "sessionTimer": {
+      "xmRemaining": "{minutes} min restantes"
+    }
+  },
+  "JoinPage": {
+    "acceptFailed": "Não foi possível aceitar o convite",
+    "acceptNote": "Ao aceitar, seu acesso passa para {name}. A conta pessoal vazia criada no seu cadastro será excluída.",
+    "conflictDefault": "Você já faz parte de outra conta. Entre com outro e-mail para participar desta.",
+    "createNewAccount": "Prefiro criar uma nova conta",
+    "fail": {
+      "expiredBody": "Este convite expirou. Peça ao administrador da conta para enviar um novo — leva só alguns segundos.",
+      "notFoundBody": "Este link não corresponde a um convite válido. Confira o endereço ou peça a quem convidou você para enviar um novo."
+    },
+    "invitedTo": "Você recebeu um convite para <account>{name}</account>",
+    "welcome": "Boas-vindas à equipe"
+  },
+  "LibErrors": {
+    "ai": {
+      "embeddingsMalformed": "A resposta de embeddings veio em formato inválido."
+    },
+    "auth": {
+      "requiresRole": "Esta ação exige a função “{min}” ou superior",
+      "roleNames": {
+        "agent": "Atendente",
+        "viewer": "Somente leitura"
+      }
+    },
+    "engine": {
+      "needsPipelineStage": "create_deal precisa de funil + etapa",
+      "noConversation": "não é possível enviar: o contato ainda não tem uma conversa",
+      "tagAddedNoConversation": "a automação tag_added não pode enviar: o contato ainda não tem uma conversa"
+    },
+    "send": {
+      "dbInsertFailed": "enviado à Meta, mas não foi possível gravar no banco de dados: {message}",
+      "noWhatsAppAddress": "o contato não tem um número de WhatsApp válido (telefone: {phone})"
+    },
+    "tags": {
+      "addFailed": "Não foi possível adicionar a tag ao contato: {message}",
+      "removeFailed": "Não foi possível remover a tag do contato: {message}",
+      "verifyFailed": "Não foi possível confirmar se o contato e a tag pertencem à sua conta"
+    },
+    "upload": {
+      "notSignedIn": "Você precisa entrar na sua conta."
+    }
+  },
+  "LoginPage": {
+    "descAccept": "Entre e vamos levar você direto ao convite.",
+    "titleWelcome": "Que bom ter você de volta"
+  },
+  "Notifications": {
+    "description": "As conversas que seus colegas atribuírem a você aparecem aqui.",
+    "emptyTitle": "Você ainda não tem notificações",
+    "markAllFailed": "Não foi possível marcar todas como lidas",
+    "markReadFailed": "Não foi possível marcar a notificação como lida"
+  },
+  "Pipelines": {
+    "analytics": {
+      "avgDealSizeTooltip": "Valor do funil dividido pelo total de negócios — o valor médio de um negócio não perdido.",
+      "howCalculated": "Como é calculado: {label}",
+      "pipelineValue": "Valor do funil",
+      "pipelineValueTooltip": "Soma dos valores de todos os negócios deste funil, sem contar os marcados como perdidos.",
+      "totalDealsTooltip": "Quantidade de negócios deste funil que não estão marcados como perdidos. Negócios ganhos também entram na conta."
+    },
+    "form": {
+      "assignedTo": "Responsável",
+      "notes": "Anotações",
+      "notesPlaceholder": "Adicionar anotações...",
+      "toastFailedCreate": "Não foi possível criar o negócio",
+      "toastFailedDelete": "Não foi possível excluir o negócio",
+      "toastFailedSave": "Não foi possível salvar o negócio",
+      "toastFailedStatus": "Não foi possível atualizar o status do negócio",
+      "toastNotSignedIn": "Você precisa entrar na sua conta",
+      "unassigned": "Sem responsável",
+      "markAsWon": "Ganho",
+      "markAsLost": "Perdido"
+    },
+    "page": {
+      "addPipeline": "Adicionar funil",
+      "createPipeline": "Criar funil",
+      "createPipelineBtn": "Criar funil",
+      "createToStartTracking": "Crie um funil para começar a acompanhar seus negócios",
+      "defaultPipelineName": "Funil de vendas",
+      "managePipelines": "Gerenciar funis",
+      "newPipeline": "Novo funil",
+      "noPipelinesYet": "Nenhum funil ainda",
+      "pipelineName": "Nome do funil",
+      "selectPipeline": "Selecionar funil",
+      "toastFailedCreatePipeline": "Não foi possível criar o funil",
+      "toastFailedLoadPipelines": "Não foi possível carregar os funis",
+      "toastFailedMoveDeal": "Não foi possível mover o negócio",
+      "toastPipelineCreated": "Funil criado"
+    },
+    "settings": {
+      "changeColor": "Alterar cor",
+      "createNewPipeline": "Criar um novo funil",
+      "deletePipeline": "Excluir funil",
+      "deletePipelineBtn": "Excluir funil",
+      "deletePipelineDesc": "Isso arquivará todos os negócios deste funil. Não é possível desfazer.",
+      "managePipeline": "Gerenciar funil",
+      "pipelineName": "Nome do funil",
+      "toastDeleted": "Funil excluído",
+      "toastFailedAddStage": "Não foi possível adicionar a etapa",
+      "toastFailedDeletePipeline": "Não foi possível excluir o funil",
+      "toastFailedDeleteStage": "Não foi possível excluir a etapa",
+      "toastFailedSave": "Não foi possível salvar o funil",
+      "toastSaved": "Funil salvo"
+    }
+  },
+  "ResetPasswordPage": {
+    "successDesc": "Pronto! Você já entrou com a nova senha."
+  },
+  "Settings": {
+    "aiConfig": {
+      "autoReplyDesc": "O bot responde automaticamente a novas mensagens recebidas (apenas quando nenhum fluxo as trata e a conversa não tem atendente responsável). Quando não consegue ajudar, transfere para uma pessoa da equipe.",
+      "description": "Use sua própria chave da OpenAI ou da Anthropic. O wacrm se conecta diretamente ao provedor com a sua chave — sem cobrança de IA por usuário, e seus dados continuam seus. Ela é usada nas respostas redigidas por IA na caixa de entrada, no bot de resposta automática e na Área de testes.",
+      "handoffQueue": "Fila sem responsável (qualquer atendente pode assumir)",
+      "handoffToDesc": "Quando o bot não consegue ajudar — ou atinge o limite de respostas — ele pausa e encaminha a conversa para cá, com uma breve anotação sobre o que aconteceu.",
+      "loadFailed": "Não foi possível carregar a configuração de IA",
+      "removeFailed": "Não foi possível remover.",
+      "sameKeyText": " — pode ser a mesma chave informada acima",
+      "saveFailed": "Não foi possível salvar.",
+      "title": "Configuração do agente de IA"
+    },
+    "aiKnowledge": {
+      "description": "Adicione perguntas frequentes, políticas ou detalhes de produtos. O assistente busca os trechos relevantes ao redigir e responder automaticamente, e assim consegue responder sem transferir a conversa.{searchType}",
+      "loadFailed": "Não foi possível carregar a base de conhecimento",
+      "openFailed": "Não foi possível abrir o documento",
+      "reindexFailed": "Não foi possível reindexar.",
+      "removeFailed": "Não foi possível remover.",
+      "saveFailed": "Não foi possível salvar.",
+      "reindexSuccess": "{count, plural, =1 {# documento reindexado} other {# documentos reindexados}}."
+    },
+    "apiKeys": {
+      "copyFailed": "Não foi possível copiar — selecione e copie manualmente",
+      "createError": "Não foi possível criar a chave",
+      "loadFailed": "Não foi possível carregar as chaves de API",
+      "newKeyDesc": "Dê a ela o nome da integração que vai usá-la e conceda apenas os escopos necessários.",
+      "revokeFailed": "Não foi possível revogar a chave",
+      "revokeSuccess": "Chave \"{name}\" revogada"
+    },
+    "deals": {
+      "defaultCurrencyDesc": "Novos negócios usam esta moeda por padrão, e os totais do funil e do painel são exibidos nela. Negócios existentes mantêm a moeda com que foram salvos.",
+      "saveFailed": "Não foi possível salvar a moeda padrão"
+    },
+    "invite": {
+      "createFailed": "Não foi possível criar o convite",
+      "inviteCreatedDesc": "Compartilhe este link com o novo colega. Ele poderá criar uma conta (ou entrar) e participar da conta como <bold>{role}</bold>. O link é válido por <bold>{days} {days, plural, =1 {dia} other {dias}}</bold>.",
+      "saveLinkHint": "Não armazenamos o link em texto puro — ao fechar esta janela, não será possível vê-lo de novo. Para compartilhar outra vez, revogue este convite e crie outro.",
+      "whatsappMessage": "Entre na conta {accountName} no wacrm usando este link (válido por {expiresInDays, plural, =1 {# dia} other {# dias}}): {url}"
+    },
+    "members": {
+      "loadFailed": "Não foi possível carregar os membros",
+      "loadInvitationsFailed": "Não foi possível carregar os convites",
+      "removeFailed": "Não foi possível remover o membro",
+      "revokeFailed": "Não foi possível revogar o convite",
+      "updateRoleFailed": "Não foi possível atualizar a função",
+      "updatedToast": "Função de {name} alterada para {role}"
+    },
+    "overview": {
+      "appearance": "Tema {mode} · cor de destaque {theme}"
+    },
+    "profile": {
+      "emailChangeFailed": "Não foi possível alterar o e-mail: {message}",
+      "passwordUpdateFailed": "Não foi possível atualizar a senha: {message}",
+      "saveFailed": "Não foi possível salvar: {message}",
+      "signOutConfirmTitle": "Sair de todos os dispositivos?",
+      "signOutEverywhere": "Sair de todos os dispositivos",
+      "signOutFailed": "Não foi possível sair: {message}",
+      "uploadFailed": "Não foi possível enviar a foto: {message}"
+    },
+    "quickReplies": {
+      "description": "Trechos reutilizáveis — texto simples ou uma mensagem interativa salva — que os atendentes podem inserir pelo campo de mensagem da caixa de entrada.",
+      "textPlaceholder": "O texto da mensagem a ser inserido"
+    },
+    "roles": {
+      "adminHint": "Gerencia membros e todo o resto",
+      "agent": "Atendente",
+      "agentHint": "Usa os recursos, sem acesso às configurações",
+      "viewer": "Somente leitura",
+      "viewerHint": "Pode ver tudo no app, mas não pode editar"
+    },
+    "tagsAndFields": {
+      "deleteConfirm": "Excluir a tag \"{name}\"? Ela será removida de todos os contatos. Essa ação não pode ser desfeita.",
+      "failedToCreateTag": "Não foi possível criar a tag",
+      "failedToDeleteTag": "Não foi possível excluir a tag",
+      "failedToLoadTags": "Não foi possível carregar as tags"
+    },
+    "templates": {
+      "authWarning": "Modelos de AUTENTICAÇÃO têm um formato fixo de corpo + botão OTP que exige outro editor. Por enquanto, crie-os no Gerenciador do WhatsApp da Meta e use <bold>Sincronizar da Meta</bold> para importá-los.",
+      "bodyHint": "Use {{1}}, {{2}} para variáveis (em sequência, começando em {{1}}).",
+      "deleteFailedHttp": "Não foi possível excluir (HTTP {status})",
+      "deleteLocalDesc": "\"{name}\" será excluído do wacrm. Como ele nunca foi enviado à Meta, não é preciso removê-lo de lá.",
+      "deleteMetaDesc": "\"{name}\" será excluído da Meta e do wacrm. Campanhas ativas que usam este modelo começarão a falhar no próximo envio. Essa ação não pode ser desfeita.",
+      "dialogNewDesc": "Crie um modelo e envie-o à Meta para aprovação. Depois de aprovado, você pode usá-lo em campanhas e na caixa de entrada.",
+      "documentHint": " PDF, Word, PowerPoint, Excel ou texto, ≤100 MB por link (≤16 MB quando enviado aqui).",
+      "editFailedHttp": "Não foi possível editar (HTTP {status})",
+      "editTitle": "Ao editar, o modelo passa por uma nova análise da Meta — o status volta para PENDENTE.",
+      "footerPlaceholder": "Texto opcional do rodapé (máx. 60 caracteres)",
+      "langFixed": "O idioma não pode ser alterado depois que o modelo já existe na Meta.",
+      "nameFixed": "O nome não pode ser alterado depois que o modelo já existe na Meta — crie um novo modelo para usar outro nome.",
+      "nameHint": "Somente letras minúsculas, números e sublinhados (_).",
+      "submitFailedHttp": "Não foi possível enviar (HTTP {status})",
+      "syncFailedHttp": "Não foi possível sincronizar (HTTP {status})",
+      "toastDeleteError": "Não foi possível excluir o modelo",
+      "toastLoadFailed": "Não foi possível carregar os modelos",
+      "toastMediaTooLarge": "O arquivo tem {size} MB — o limite de envio é {max} MB.",
+      "toastSubmitFailed": "Não foi possível enviar",
+      "toastSyncError": "Não foi possível sincronizar os modelos",
+      "toastSyncFailed": "Não foi possível sincronizar: {preview}",
+      "toastSyncTruncated": "Apenas os primeiros 2.000 modelos foram sincronizados — sua conta tem mais. Sincronize novamente para continuar ou entre em contato com o suporte se o problema persistir.",
+      "toastUploadFailed": "Não foi possível enviar o arquivo."
+    },
+    "whatsapp": {
+      "apiConnectionFailed": "Não foi possível conectar à API",
+      "connectedDesc": "Seu token de acesso foi autenticado pela Meta. Veja o status de registro abaixo para saber se os webhooks estão realmente funcionando.",
+      "description": "Conecte sua API do WhatsApp Business da Meta. Credenciais, webhook e passo a passo da configuração ficam todos aqui.",
+      "lastAttemptFailed": "A última tentativa falhou: ",
+      "loadFailed": "Não foi possível carregar a configuração do WhatsApp",
+      "metaErrorDetailsHint": "Informe estes detalhes ao entrar em contato com o suporte da Meta.",
+      "phoneNumberIdNotNumeric": "O Phone Number ID deve conter apenas dígitos. Copie o ID numérico em Meta → WhatsApp → Configuração da API, não o número de telefone em si.",
+      "pinHint": "Necessário apenas para receber mensagens em um número de produção. Defina-o em Meta Business Manager → Contas do WhatsApp → Números de telefone → Verificação em duas etapas e cole-o aqui para que o wacrm possa inscrever o número — caso contrário, a Meta encaminha os eventos recebidos para o último app que assumiu o número (problema comum ao adicionar um segundo número à mesma conta do WhatsApp Business). Números de teste da Meta não têm PIN e já vêm registrados — deixe em branco nesse caso. Deixar em branco também mantém intacto o registro existente.",
+      "resetFailed": "Não foi possível redefinir a configuração",
+      "saveFailed": "Não foi possível salvar a configuração",
+      "setupInstructionsDesc": "Siga estes passos para conectar sua API do WhatsApp Business.",
+      "step4_3": "Cole a <strong class=\"text-foreground\">URL de callback do webhook</strong> mostrada acima",
+      "step4_5": "Assine o campo \"messages\" do webhook",
+      "webhookVerifyTokenHint": "Um texto criado por você. Deve ser igual ao token definido nas configurações de webhook da Meta."
+    }
+  },
+  "Sidebar": {
+    "broadcasts": "Campanhas",
+    "defaultAvatar": "Foto",
+    "pipelines": "Funis",
+    "primaryNav": "Navegação principal",
+    "roleAgent": "Atendente",
+    "roleViewer": "Somente leitura"
+  },
+  "StarterAutomations": {
+    "lead_qualifier": {
+      "text": "Ótimo, será um prazer ajudar com os valores! Uma pergunta rápida: de quantas licenças você precisa, mais ou menos?"
+    },
+    "out_of_office": {
+      "text": "Obrigado pela mensagem! No momento estamos fora do horário de atendimento (9h às 18h) e responderemos amanhã logo cedo."
+    }
+  },
+  "StarterFlows": {
+    "faq_bot": {
+      "pricingAnswer": "Nossos planos começam em R$ 9/mês. Acesse https://example.com/pricing para ver todos os detalhes.",
+      "refundsAnswer": "Aceitamos pedidos de reembolso em até 30 dias após a compra. Responda com o número do seu pedido que a gente cuida do resto."
+    },
+    "lead_capture": {
+      "description": "Cumprimente quem entra em contato pela primeira vez, colete nome, e-mail e empresa e transfira para o time de vendas com as respostas na anotação.",
+      "intro": "Olá! 👋 Vou fazer algumas perguntas rápidas para direcionar você à pessoa certa."
+    },
+    "welcome_menu": {
+      "description": "Cumprimente quem enviar uma palavra-chave e encaminhe para o atendente certo, conforme a pessoa já seja cliente ou não.",
+      "existingNote": "Cliente atual precisa de ajuda — confira o histórico da conta antes de responder.",
+      "newNote": "Novo cliente — envie a tabela de preços e o link de cadastro.",
+      "text": "Olá! 👋 Boas-vindas ao nosso atendimento. Você já é cliente ou é a primeira vez por aqui?"
+    }
+  },
+  "Validation": {
+    "automations": {
+      "agentRequired": "o atendente é obrigatório quando o modo é \"specific\"",
+      "conditionOperandRequired": "o valor de comparação da condição é obrigatório",
+      "conditionSubjectRequired": "o critério da condição é obrigatório",
+      "needsStep": "automações ativas precisam de pelo menos um passo",
+      "pipelineRequired": "o funil é obrigatório",
+      "unknownStepType": "tipo de passo desconhecido: {type}"
+    },
+    "flows": {
+      "buttonMissingNext": "O botão {n} aponta para um bloco inexistente: \"{key}\".",
+      "buttonNeedsNext": "O botão {n} precisa de um próximo bloco.",
+      "collectMissingNext": "O bloco Coletar resposta aponta para um bloco inexistente: \"{key}\".",
+      "collectNeedsNext": "O bloco Coletar resposta precisa apontar para um próximo bloco.",
+      "collectNeedsPrompt": "O bloco Coletar resposta precisa de uma pergunta para enviar ao cliente.",
+      "collectNeedsVarKey": "O bloco Coletar resposta precisa de uma var_key para guardar a resposta.",
+      "conditionMissingBranch": "O ramo \"{branch}\" da condição aponta para um bloco inexistente: \"{key}\".",
+      "conditionNeedsBranch": "A condição precisa de um bloco para o ramo \"{branch}\".",
+      "conditionNeedsSubject": "A condição precisa de um critério (var / tag / contact_field).",
+      "conditionNeedsSubjectKey": "A condição precisa de um subject_key (nome da variável, ID da tag ou nome do campo).",
+      "entryMissing": "O bloco de entrada \"{id}\" não existe.",
+      "entryRequired": "Escolha um bloco de entrada antes de ativar.",
+      "needsNode": "Um fluxo precisa de pelo menos um bloco antes de ser ativado.",
+      "operatorNeedsValue": "O operador \"{operator}\" normalmente espera um valor de comparação — um valor vazio só vai corresponder a critérios vazios.",
+      "rowMissingNext": "A linha {n} aponta para um bloco inexistente: \"{key}\".",
+      "rowNeedsNext": "A linha {n} precisa de um próximo bloco.",
+      "sendButtonsNeedsButton": "O bloco Enviar botões precisa de pelo menos um botão.",
+      "sendButtonsNeedsText": "O bloco Enviar botões precisa de um texto.",
+      "sendListNeedsLabel": "O bloco Enviar lista precisa de um rótulo de botão (o texto que abre a lista).",
+      "sendListNeedsRow": "O bloco Enviar lista precisa de pelo menos uma linha.",
+      "sendListNeedsText": "O bloco Enviar lista precisa de um texto.",
+      "sendMediaMissingNext": "O bloco Enviar mídia aponta para um bloco inexistente: \"{key}\".",
+      "sendMediaNeedsFile": "O bloco Enviar mídia precisa de um arquivo (envie um antes de ativar).",
+      "sendMediaNeedsNext": "O bloco Enviar mídia precisa apontar para um próximo bloco.",
+      "sendMediaNeedsType": "O bloco Enviar mídia precisa de um tipo de mídia (imagem, vídeo ou documento).",
+      "sendMessageMissingNext": "O bloco Enviar mensagem aponta para um bloco inexistente: \"{key}\".",
+      "sendMessageNeedsNext": "O bloco Enviar mensagem precisa apontar para um próximo bloco.",
+      "sendMessageNeedsText": "O bloco Enviar mensagem precisa de um texto.",
+      "setTagMissingNext": "O bloco Marcar contato aponta para um bloco inexistente: \"{key}\".",
+      "setTagNeedsMode": "O bloco Marcar contato precisa de um modo (adicionar ou remover).",
+      "setTagNeedsNext": "O bloco Marcar contato precisa apontar para um próximo bloco.",
+      "setTagNeedsTag": "O bloco Marcar contato precisa de uma tag para aplicar.",
+      "startMissingNext": "O bloco Início aponta para um bloco inexistente: \"{key}\".",
+      "startNeedsNext": "O bloco Início precisa apontar para um próximo bloco.",
+      "tooManyRows": "O bloco Enviar lista permite no máximo {max} linhas no total entre as seções.",
+      "unknownNodeType": "Tipo de bloco desconhecido: \"{type}\".",
+      "unreachable": "O bloco \"{key}\" não é alcançável a partir do bloco de entrada."
+    },
+    "interactive": {
+      "bodyTooLong": "O bodyText da mensagem interativa excede {max} caracteres.",
+      "buttonCount": "A mensagem interativa com botões exige de 1 a {max} botões (recebidos: {got}).",
+      "footerTooLong": "O footerText da mensagem interativa excede {max} caracteres.",
+      "headerTooLong": "O headerText da mensagem interativa excede {max} caracteres.",
+      "listRowCount": "A lista interativa exige de 1 a {max} linhas no total, somando todas as seções (recebidas: {got}).",
+      "listSectionCount": "A lista interativa exige de 1 a {max} seções (recebidas: {got})."
+    },
+    "templates": {
+      "bodyNotContiguous": "As variáveis do corpo devem ser sequenciais, começando em {first} — encontradas: {found}.",
+      "bodyTooLong": "O texto do corpo excede {max} caracteres (atual: {got}).",
+      "footerTooLong": "O texto do rodapé excede {max} caracteres (atual: {got}).",
+      "headerTextTooLong": "O texto do cabeçalho excede {max} caracteres (atual: {got}).",
+      "mediaHeaderSendSource": "O cabeçalho {type} exige um link ou ID de mídia no envio — defina header_media_url no modelo ou informe headerMediaUrl/headerMediaId.",
+      "tooManyButtons": "Modelos podem ter no máximo {max} botões (recebidos: {got}).",
+      "tooManyCopyCodeButtons": "É permitido no máximo {max} botão COPY_CODE (recebidos: {got}).",
+      "tooManyPhoneButtons": "É permitido no máximo {max} botão PHONE_NUMBER (recebidos: {got}).",
+      "tooManyUrlButtons": "São permitidos no máximo {max} botões URL (recebidos: {got})."
+    }
+  },
+  "SignupPage": {
+    "checkEmailDesc": "Enviamos um link de confirmação para <strong>{email}</strong>. Abra seu e-mail e clique no link para confirmar a conta. Depois disso, você configura sua organização em 4 passos rápidos."
+  }
+}
