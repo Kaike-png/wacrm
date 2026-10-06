@@ -235,10 +235,11 @@ describe('secrets stay on the server', () => {
   });
 
   it('server code does not select * from whatsapp_config outside the reviewed paths', () => {
-    // The webhook and the engines run with the service role already.
+    // The webhook (its tenant lookup lives in routing.ts) and the engines
+    // run with the service role already.
     const allowed = new Set([
       'src/custom/whatsapp/config-store.ts',
-      'src/app/api/whatsapp/webhook/route.ts',
+      'src/custom/whatsapp/routing.ts',
       'src/lib/automations/meta-send.ts',
     ]);
     const offenders = files

@@ -243,7 +243,7 @@ marcador ou import do core para o fork fora de um seam registrado.
 | **P-005** | seam | `contact-form.tsx`, `contact-detail-view.tsx`, `lib/whatsapp/wa-identity.ts` (`contactHandle`), `lib/contacts/parse-contact-csv.ts`, `contacts/page.tsx`, `inbox/conversation-list.tsx` | CPF/CNPJ, razão social e endereço (`br_contact_profiles`, migration 901), telefone brasileiro → E.164, máscara `+55 (21) …` ([`BRAZILIAN_CONTACTS.md`](./BRAZILIAN_CONTACTS.md)) | fork-only |
 | **P-006** | seam | `components/settings/settings-sections.ts`, `settings/page.tsx`, `api/whatsapp/media/[mediaId]/route.ts` | seção “Organização” (organização = `accounts`; status + `br_account_profiles`, migration 902) e `Cache-Control: private` na mídia autenticada; correções de isolamento em SQL na migration 903 ([`TENANCY.md`](./TENANCY.md)) | **propor upstream** a 903 (RPCs expostas, referências entre tenants, storage listável) e o cache; a organização é fork-only |
 | **P-007** | seam | `src/middleware.ts` (`/onboarding` protegido), `dashboard-shell.tsx` (`OnboardingGate`) | assistente de configuração inicial em `/onboarding` (`onboarding_progress`, migration 904) ([`ONBOARDING.md`](./ONBOARDING.md)) | fork-only |
-| **P-008** | seam + call sites | `instrumentation.ts` (novo), `api/whatsapp/{config,config/verify-registration,broadcast,media,react,templates/*,webhook}`, `lib/whatsapp/{broadcast-core,broadcast-resume,send-message}.ts`, `settings/whatsapp-config.tsx`, `inbox/page.tsx`, `settings/page.tsx`, `types/index.ts` | segredos do WhatsApp só no servidor (privilégio por coluna, migration 905), Business ID/PIN, log de conexão, WABA conferida no webhook, card de status, redação de logs ([`WHATSAPP_SAAS.md`](./WHATSAPP_SAAS.md)) | **propor upstream** a exposição de ciphertext e a checagem de WABA |
+| **P-008** | seam + call sites | `instrumentation.ts` (novo), `api/whatsapp/{config,config/verify-registration,broadcast,media,react,templates/*,webhook}` (+ `webhook/route.test.ts`), `lib/whatsapp/{broadcast-core,broadcast-resume,send-message}.ts`, `settings/whatsapp-config.tsx`, `inbox/page.tsx`, `settings/page.tsx`, `types/index.ts` | segredos do WhatsApp só no servidor (privilégio por coluna, migration 905), Business ID/PIN, log de conexão, roteamento do webhook por número + WABA obrigatória com status escopados pelo tenant (`custom/whatsapp/routing.ts`, F-19/F-20), card de status, redação de logs ([`WHATSAPP_SAAS.md`](./WHATSAPP_SAAS.md)) | **propor upstream** a exposição de ciphertext e a checagem de WABA |
 | **P-009** | seam | `src/middleware.ts` (`/platform` protegido) | painel `/platform` ([`PLATFORM_ADMIN.md`](./PLATFORM_ADMIN.md)). O bloqueio por RLS da 906 (`is_account_member` olhando status) foi **desfeito pela 911**; os demais arquivos que este patch tocava passaram para P-010/P-014 | fork-only |
 | **P-010** | seam + call sites | `lib/auth/{account,api-context}.ts`, `lib/ai/config.ts`, `lib/api/v1/contacts.ts`, `api/account/{invitations,api-keys}`, `api/automations` (+`duplicate`), `api/whatsapp/config`, `contacts/{contact-form,import-modal}.tsx`, `settings/page.tsx`, `agents/page.tsx` | planos SaaS: limites e recursos lidos por chave do banco via `src/billing/entitlements` (migration 907), 403 padronizado ([`PLANS.md`](./PLANS.md)) | fork-only |
 | **P-011** | seam | `(dashboard)/contacts/page.tsx`, `(dashboard)/automations/page.tsx` | aviso de limite atingido com sugestão de upgrade (`UsageService`, migration 908 — [`USAGE.md`](./USAGE.md)) | fork-only |
@@ -440,7 +440,17 @@ Marcadores × registro: **0 divergências** (87 de 89 arquivos com marcador;
 
 1. `messages/{en,ko,es,pt}.json` (~700 linhas cada, P-001) — maior risco; mandar upstream.
 2. `api/whatsapp/config/route.ts` (124 linhas, P-008/010/014, 14 marcadores).
-3. `api/whatsapp/webhook/route.ts` (38 linhas, **35 commits** do upstream).
+3. `api/whatsapp/webhook/route.ts` (**35 commits** do upstream). Depois do
+   F-19/F-20 o patch P-008 cresceu: o bloco de busca da config por
+   `phone_number_id` (+ logs de 0/≥2 linhas e checagem de WABA) foi
+   **substituído** por uma chamada a `routeWebhookDelivery()`, e
+   `handleStatusUpdate(status, accountId)` usa `tenantMessageRows` /
+   `tenantBroadcastRecipient` no lugar das 3 consultas por `wamid`. Num merge
+   em que o upstream mexer nesses blocos: aceitar a versão do upstream e
+   reaplicar as duas trocas (marcadores `FORK-PATCH(P-008)` indicam cada
+   ponto). `route.test.ts` (do upstream) também carrega P-008: um `vi.mock`
+   do módulo de roteamento e `.in()` no double de `messages.update`. **Bom
+   candidato a PR upstream** (é um bug de isolamento, não regra do fork).
 4. `.env.local.example` (5 patches).
 5. `(dashboard)/settings/page.tsx` (P-004/006/008/010).
 6. `lib/automations/engine.ts`, `inbox/message-thread.tsx`, `automation-builder.tsx`, `lib/whatsapp/meta-api.ts`, `contact-detail-view.tsx`, `contacts/page.tsx`, `template-manager.tsx`.
@@ -451,7 +461,7 @@ Marcadores × registro: **0 divergências** (87 de 89 arquivos com marcador;
 | Arquivo | O que está inline | Destino sugerido |
 |---|---|---|
 | `api/whatsapp/config/route.ts` | checagem de admin própria, validação de Business ID, PIN, campos de saúde, log de conexão, limite + inadimplência | `custom/whatsapp`: `assertConfigAdmin()`, `forkConfigFields()`, `logSaveOutcome()`, `assertCanConnectNumber()` |
-| `api/whatsapp/webhook/route.ts` | bloco de WABA divergente; `automationsAllowed` passado por 3 ramos | `checkDeliveryRouting(config, entry)` + um gate no início |
+| `api/whatsapp/webhook/route.ts` | ~~bloco de WABA divergente~~ (movido para `custom/whatsapp/routing.ts` no F-19/F-20); `automationsAllowed` passado por 3 ramos | um gate no início |
 | `contact-form.tsx` (15 marcadores), `contact-detail-view.tsx` (10) | perfil BR espalhado em ~10 pontos | `useContactFormExtensions()` + um slot |
 | `import-modal.tsx` | parada por limite dentro do loop | `createImportLimiter()` em `src/billing` |
 | `lib/currency.ts` | `isEnglishFormat()` e ramos em 3 funções | delegar a `custom/locale/format` |

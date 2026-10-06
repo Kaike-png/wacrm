@@ -20,11 +20,11 @@
   meio deixava o pagamento "pago" e o plano sem trocar, e o retry do gateway
   não corrigia), trial sem fim, máquina de estados da organização sem
   validação, webhook do gateway *mock* forjável em produção.
-- **Pendências (P2/P3)** concentram-se no código do core (webhook da Meta,
-  mensagens de erro cruas, segredos cifrados legíveis por qualquer membro) e
-  em dívida de compatibilidade com o upstream. Nenhuma bloqueia o próximo
-  módulo, mas as do webhook da Meta devem ser resolvidas antes do Embedded
-  Signup.
+- **Pendências (P2/P3)** concentram-se no código do core (mensagens de erro
+  cruas, segredos cifrados legíveis por qualquer membro) e em dívida de
+  compatibilidade com o upstream. Nenhuma bloqueia o próximo módulo. As do
+  webhook da Meta (F-19, F-20) foram resolvidas em seguida, antes do
+  Embedded Signup.
 
 ## Separação de camadas
 
@@ -74,8 +74,8 @@ Legenda de status: **Corrigido** (com teste) · **Pendente** · **Aceito** (deci
 | F-16 | Onboarding | P3 | "Pular tudo" ou `?step=done` marcava o onboarding como concluído sem o passo obrigatório (organização). | `finish()` só conclui com os passos obrigatórios | **Corrigido** (teste) |
 | F-17 | Onboarding | P3 | Usuário sem organização (trigger de signup falhou) ficava num spinner infinito em `/onboarding`. | Mensagem com saída | **Corrigido** (`unlinked`) |
 | F-18 | Repositório | P2 | `supabase/.temp/` (o CLI guarda `docker.env` com chaves — hoje as chaves demo públicas), `supabase/.branches/`, `.idea/` não ignorados: um `git add .` os commitaria. | `.gitignore` | **Corrigido** |
-| F-19 | WhatsApp / multi-tenant | P2 | Atualizações de status da Meta (`messages.message_id`, `broadcast_recipients.whatsapp_message_id`) são aplicadas **sem filtro de tenant** e antes de resolver o `phone_number_id`/WABA; o fan-out pega `.limit(1)` sem ordem. Um agente pode gravar via RLS uma linha com o wamid de outro tenant e receber no *seu* webhook de saída o evento `message.status_updated` (wamid + status) do outro. | Resolver config por `metadata.phone_number_id` e conferir WABA antes de tratar status; filtrar por `account_id`; revogar escrita do cliente nessas colunas | **Pendente** (arquivo do core com 35 commits upstream/6 meses; fazer com teste dedicado antes do Embedded Signup) |
-| F-20 | WhatsApp / multi-tenant | P2 | Checagem de WABA (`entry.id`) só roda se o tenant salvou `waba_id`, que é opcional. Com vários `META_APP_SECRET`, um app pode assinar evento para o número de outro tenant sem WABA salvo. | Exigir `waba_id` ao salvar (já é validado na Meta) e descartar entregas sem ele | **Pendente** |
+| F-19 | WhatsApp / multi-tenant | P2 | Status da Meta eram aplicados só pelo `wamid`, em todos os tenants, antes de identificar o tenant; o fan-out pegava `.limit(1)` sem ordem. Um agente podia gravar via RLS o wamid de outro tenant e receber o `message.status_updated` dele. | Rotear a entrega primeiro e escopar as escritas pelo tenant | **Corrigido**: `src/custom/whatsapp/routing.ts` resolve o tenant (phone_number_id + WABA) antes de status e mensagens; `messages` filtradas por `conversations.account_id`, `broadcast_recipients` por `broadcasts.account_id`, fan-out só para o tenant roteado. Testes: unidade da rota, integração em banco real (wamid igual em A e B), E2E HTTP assinado no dev server |
+| F-20 | WhatsApp / multi-tenant | P2 | A conferência de WABA (`entry.id`) era pulada quando o tenant não salvou `waba_id`. | Nenhuma entrega sem WABA conferida | **Corrigido**: `entry.id` obrigatório; sem `waba_id` salvo, a WABA da entrega é confirmada na Meta com o token do próprio tenant e então gravada (`waba_id` único); falha, erro da Meta ou WABA de outro tenant → descartada com log técnico (só ids) + `webhook_rejected`; recusas em cache 10 min |
 | F-21 | Planos | P2 | Organização sem linha em `billing_subscriptions` cai nos padrões do catálogo (ilimitado). Acontece em contas criadas antes da 907 (2 no banco local) e se não houver plano padrão ativo. | Decisão de produto: atribuir plano às contas antigas pelo painel (o painel mostra) ou backfill explícito | **Aceito** (decisão da 907: nunca impor plano restritivo em silêncio) |
 | F-22 | Cadastro (core) | P2 | O trigger de signup do upstream (017) engole qualquer erro (`EXCEPTION WHEN OTHERS`) e cria usuário sem organização. | Propor upstream; a UI agora mostra o estado (F-17) | **Pendente** (core) |
 | F-23 | Segredos | P3 | `ai_configs.api_key`, `ai_configs.embeddings_api_key` e `webhook_endpoints.secret` (cifrados) são legíveis por qualquer membro (inclusive viewer) via PostgREST; `whatsapp_config` já foi corrigido na 905. | Mesmo padrão da 905 (privilégio por coluna + `has_*`) | **Pendente** |
@@ -98,7 +98,7 @@ Legenda de status: **Corrigido** (com teste) · **Pendente** · **Aceito** (deci
 | organizações (`accounts`) | `id` | RLS membro; status/trial/dono só service role (trigger 902); transições válidas (912) | pgTAP tenancy + foundation |
 | usuários (`profiles`) | `account_id` | RLS; inserção de profile guardada (903); limite de assentos (907/912) | pgTAP |
 | contatos, conversas, mensagens, deals, tags… | `account_id` | RLS `is_account_member` + `tenant_enforce_refs` (referência para outro tenant recusada) | pgTAP genérico por tabela (leitura, update, delete, mover linha) |
-| WhatsApp (`whatsapp_config`) | `account_id`; `phone_number_id` e `waba_id` únicos globais | segredos só service role (905); webhook roteia por `phone_number_id` e confere WABA (ressalvas F-19/F-20) | pgTAP `whatsapp_secrets` |
+| WhatsApp (`whatsapp_config`) | `account_id`; `phone_number_id` e `waba_id` únicos globais | segredos só service role (905); webhook roteia por `phone_number_id` + WABA obrigatória e escopa os status pelo tenant (F-19/F-20) | pgTAP `whatsapp_secrets`, `routing*.test.ts` |
 | planos / features | catálogo global | leitura para autenticados, escrita só pelo painel (DEFINER) | pgTAP billing_plans |
 | `billing_subscriptions` | `account_id` (PK) | cliente lê colunas não sensíveis; escrita só service role | pgTAP |
 | `billing_payments` | `account_id` | leitura só admin da organização; escrita só service role (`billing_apply_effects` confere `account_id` do payload) | pgTAP |
@@ -195,7 +195,7 @@ evento na API **antes** do claim, então 10 reentregas = 10 GETs (cota da API).
 
 | Suíte | Antes | Depois |
 |---|---|---|
-| vitest | 1354 | 1364 (+ 8 de integração, opt-in) |
+| vitest | 1354 | 1380 (+ 14 de integração, opt-in) — inclui F-19/F-20 |
 | pgTAP | 357 em 8 arquivos | 395 em 9 arquivos (`foundation_hardening`: 38) |
 | concorrência | — | `npm run test:db:race` (2 cenários; falha sem a 912) |
 | fluxo comercial | — | `npm run test:flow` (17 passos do pedido, banco real + mock) |
@@ -212,5 +212,5 @@ Asaas sandbox real (só o fake HTTP); webhook real da Meta.
 TZ=UTC npm test              # unidade + guardas
 npm run test:db              # pgTAP (isolamento, billing, painel, 912)
 npm run test:db:race         # limites sob concorrência (cria e apaga uma org)
-npm run test:flow            # fluxo comercial completo no Supabase local
+npm run test:flow            # integração no Supabase local: fluxo comercial + roteamento do webhook (F-19/F-20)
 ```

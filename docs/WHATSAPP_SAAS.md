@@ -94,11 +94,31 @@ funciona.
 
 1. **Assinatura:** `X-Hub-Signature-256` contra `META_APP_SECRET`
    (upstream, aceita vários apps).
-2. **Tenant:** pelo `metadata.phone_number_id`, que é único.
-3. **Novo:** o **`entry.id` (WABA da entrega) precisa ser a WABA que o
-   tenant salvou.** Se não for, a mensagem é descartada e um evento
-   `webhook_rejected` vai para o log do tenant. Isso cobre número
-   reaproveitado em outra WABA, configuração errada ou roteamento forjado.
+2. **Tenant:** pelo `metadata.phone_number_id`, que é único. Vale para
+   **mensagens e status de entrega** (antes os status eram aplicados só
+   pelo `wamid`, em qualquer tenant — audit F-19). Código:
+   `src/custom/whatsapp/routing.ts`.
+3. **O `entry.id` (WABA da entrega) é obrigatório e precisa ser a WABA do
+   tenant** (audit F-20):
+   - `waba_id` salvo e igual → entrega aceita;
+   - salvo e diferente, ou entrega sem `entry.id` → descartada;
+   - **tenant sem `waba_id` salvo** → não é mais um passe livre: o app
+     pergunta à Meta, com o token desse tenant, se o número está na WABA da
+     entrega (`GET /{waba}/phone_numbers`). Confirmado → a WABA é gravada
+     no tenant (`waba_id`, único) e as próximas entregas usam o caminho
+     rápido. Não confirmado, erro da Meta, ou WABA já ligada a outro
+     tenant → descartada; recusas ficam em cache 10 min (sem uma chamada à
+     Graph por entrega forjada).
+   - Número desconhecido ou repetido → descartado.
+
+   Toda recusa gera uma linha técnica `[webhook] delivery ignored:
+   reason=… phone_number_id=… waba=…` (só ids, nunca token) e, quando o dono
+   do número é conhecido, `webhook_rejected` no log do tenant. Nunca há
+   fallback para "algum" tenant.
+   Status aceitos atualizam só linhas do tenant roteado (`messages` via
+   `conversations.account_id`, `broadcast_recipients` via
+   `broadcasts.account_id`), e o evento `message.status_updated` vai só para
+   os webhooks de saída desse tenant.
 4. **Novo:** `last_webhook_at` é atualizado, no máximo a cada 5 minutos.
    O primeiro webhook depois de um intervalo grava `webhook_received`.
 5. **Eventos de modelo** chegam pela WABA (`entry.id`). Com `waba_id`

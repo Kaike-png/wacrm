@@ -197,7 +197,11 @@ vi.mock('@supabase/supabase-js', () => ({
             // Status webhook mirror (#535): update(...).eq('message_id', ...)
             update: (patch: Record<string, unknown>) => {
               h.state.messageUpdates.push(patch)
-              return { eq: () => Promise.resolve({ error: null }) }
+              return {
+                eq: () => Promise.resolve({ error: null }),
+                // FORK-PATCH(P-008): status writes target the routed account's row ids
+                in: () => Promise.resolve({ error: null }),
+              }
             },
             // Idempotent insert: upsert(...).select('id')
             upsert: (row: Record<string, unknown>, options: unknown) => {
@@ -238,6 +242,26 @@ vi.mock('@supabase/supabase-js', () => ({
       },
     },
   }),
+}))
+
+// FORK-PATCH(P-008): tenant routing lives in src/custom/whatsapp/routing
+// (tested there against a real database). Here it resolves the fixture
+// config, and status writes go through the account-scoped lookups.
+vi.mock('@/custom/whatsapp/routing', () => ({
+  routeWebhookDelivery: vi.fn(async () => ({
+    account_id: 'acc-1',
+    user_id: 'user-1',
+    phone_number_id: 'pn-1',
+    access_token: 'enc',
+    mirror_inbound_media: h.state.mirrorInboundMedia,
+  })),
+  tenantMessageRows: vi.fn(async () => [
+    { id: 'msg-out-1', conversation_id: 'conv-1' },
+  ]),
+  tenantBroadcastRecipient: vi.fn(async () => ({
+    data: h.state.broadcastRecipient,
+    error: null,
+  })),
 }))
 
 vi.mock('@/lib/whatsapp/encryption', () => ({
@@ -1010,5 +1034,88 @@ describe('status webhook: failed statuses keep Meta\'s reason (#535)', () => {
     expect(h.state.recipientUpdates).toHaveLength(1)
     expect(h.state.recipientUpdates[0]).not.toHaveProperty('error_message')
     expect(h.state.recipientUpdates[0]).not.toHaveProperty('error_code')
+  })
+})
+
+// FORK-PATCH(P-008): tenant routing of Meta deliveries (audit F-19/F-20).
+describe('fork: deliveries are routed to exactly one organization', () => {
+  const DELIVERED = {
+    id: 'wamid.SHARED',
+    status: 'delivered',
+    timestamp: '1700000100',
+    recipient_id: '15551230000',
+  }
+
+  it('statuses are looked up, written and fanned out only inside the routed organization', async () => {
+    const routing = await import('@/custom/whatsapp/routing')
+    vi.mocked(routing.routeWebhookDelivery).mockResolvedValueOnce({
+      account_id: 'acc-B',
+      user_id: 'user-B',
+      phone_number_id: 'pn-1',
+      access_token: 'enc',
+    })
+    h.state.broadcastRecipient = { id: 'rec-B', status: 'sent' }
+    await runStatusWebhook(DELIVERED)
+
+    expect(routing.tenantMessageRows).toHaveBeenCalledWith('acc-B', 'wamid.SHARED')
+    expect(routing.tenantBroadcastRecipient).toHaveBeenCalledWith('acc-B', 'wamid.SHARED')
+    expect(h.dispatchWebhookEvent).toHaveBeenCalledTimes(1)
+    expect(h.dispatchWebhookEvent.mock.calls[0][1]).toBe('acc-B')
+  })
+
+  it('a wamid with no row in the routed organization writes nothing (another tenant\'s row is never matched)', async () => {
+    const routing = await import('@/custom/whatsapp/routing')
+    vi.mocked(routing.tenantMessageRows).mockResolvedValueOnce([])
+    vi.mocked(routing.tenantBroadcastRecipient).mockResolvedValueOnce({ data: null, error: null })
+    await runStatusWebhook(DELIVERED)
+
+    expect(h.state.messageUpdates).toHaveLength(0)
+    expect(h.state.recipientUpdates).toHaveLength(0)
+    expect(h.dispatchWebhookEvent).not.toHaveBeenCalled()
+  })
+
+  it('an unroutable delivery (unknown number, WABA missing or not confirmed) is ignored entirely', async () => {
+    const routing = await import('@/custom/whatsapp/routing')
+    vi.mocked(routing.routeWebhookDelivery).mockResolvedValue(null)
+    try {
+      await runStatusWebhook(DELIVERED)
+      await runWebhook()
+    } finally {
+      vi.mocked(routing.routeWebhookDelivery).mockReset()
+      vi.mocked(routing.routeWebhookDelivery).mockImplementation(async () => ({
+        account_id: 'acc-1',
+        user_id: 'user-1',
+        phone_number_id: 'pn-1',
+        access_token: 'enc',
+        mirror_inbound_media: h.state.mirrorInboundMedia,
+      }))
+    }
+    expect(routing.tenantMessageRows).not.toHaveBeenCalled()
+    expect(h.state.messageUpdates).toHaveLength(0)
+    expect(h.state.upsertCalls).toHaveLength(0)
+    expect(h.dispatchWebhookEvent).not.toHaveBeenCalled()
+  })
+
+  it('hands phone_number_id and the delivery WABA (entry.id) to the router', async () => {
+    const routing = await import('@/custom/whatsapp/routing')
+    const body = {
+      entry: [
+        {
+          id: 'WABA-9',
+          changes: [
+            {
+              field: 'messages',
+              value: { metadata: { phone_number_id: 'pn-9' }, statuses: [DELIVERED] },
+            },
+          ],
+        },
+      ],
+    }
+    await POST({
+      text: async () => JSON.stringify(body),
+      headers: { get: () => 'sha256=stub' },
+    } as unknown as Request)
+    for (const cb of h.state.afterCallbacks) await cb()
+    expect(routing.routeWebhookDelivery).toHaveBeenCalledWith('pn-9', 'WABA-9')
   })
 })

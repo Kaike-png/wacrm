@@ -163,7 +163,7 @@ export const CORE_PATCHES: CorePatch[] = [
   {
     id: 'P-008',
     summary:
-      'WhatsApp for SaaS: secrets server-only (column privileges, migration 905) read/written through src/custom/whatsapp/config-store, explicit admin check on save, Business ID + encrypted PIN, connection log, WABA check + health stamp in the webhook, status card, console redaction (instrumentation)',
+      'WhatsApp for SaaS: secrets server-only (column privileges, migration 905) read/written through src/custom/whatsapp/config-store, explicit admin check on save, Business ID + encrypted PIN, connection log, tenant routing in the webhook (phone_number_id + mandatory WABA, confirmed with Meta and pinned when unsaved; statuses scoped to the routed account — audit F-19/F-20) + health stamp, status card, console redaction (instrumentation)',
     files: [
       'src/instrumentation.ts',
       'src/app/api/whatsapp/config/route.ts',
@@ -175,6 +175,7 @@ export const CORE_PATCHES: CorePatch[] = [
       'src/app/api/whatsapp/templates/submit/route.ts',
       'src/app/api/whatsapp/templates/sync/route.ts',
       'src/app/api/whatsapp/webhook/route.ts',
+      'src/app/api/whatsapp/webhook/route.test.ts',
       'src/lib/whatsapp/broadcast-core.ts',
       'src/lib/whatsapp/broadcast-resume.ts',
       'src/lib/whatsapp/send-message.ts',

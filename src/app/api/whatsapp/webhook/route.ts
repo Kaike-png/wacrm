@@ -23,7 +23,13 @@ import {
   isTemplateWebhookField,
 } from '@/lib/whatsapp/template-webhook'
 // FORK-PATCH(P-008): tenant routing checks + connection health — docs/WHATSAPP_SAAS.md
-import { logConnectionEvent, noteWebhookReceived } from '@/custom/whatsapp/connection'
+import { noteWebhookReceived } from '@/custom/whatsapp/connection'
+// FORK-PATCH(P-008): tenant routing (phone_number_id + WABA, no fallback) — audit F-19/F-20
+import {
+  routeWebhookDelivery,
+  tenantBroadcastRecipient,
+  tenantMessageRows,
+} from '@/custom/whatsapp/routing'
 // FORK-PATCH(P-014): delinquency policy — docs/DELINQUENCY.md
 import { tenantCan, tenantReceivesInbound } from '@/billing/enforcement'
 
@@ -294,70 +300,25 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
 
       const value = change.value
 
+      // FORK-PATCH(P-008): resolve the ONE tenant this delivery belongs to
+      // (phone_number_id + the delivery's WABA, confirmed with Meta when the
+      // tenant saved none) before touching anything — statuses included.
+      // Unresolvable → ignored and logged, never guessed (audit F-19/F-20).
+      if (!value.statuses && !(value.messages && value.contacts)) continue
+      const phoneNumberId = value.metadata?.phone_number_id
+      const config = await routeWebhookDelivery(phoneNumberId, entry.id)
+      if (!config) continue
+
       // Handle status updates
       if (value.statuses) {
         for (const status of value.statuses) {
-          await handleStatusUpdate(status)
+          await handleStatusUpdate(status, config.account_id) // FORK-PATCH(P-008)
         }
       }
 
       // Handle incoming messages
       if (!value.messages || !value.contacts) continue
 
-      const phoneNumberId = value.metadata.phone_number_id
-
-      // Find user's config by phone_number_id. `.single()` returns
-      // PGRST116 for both 0 rows AND ≥2 rows — distinguish them so
-      // operators see the real cause in logs. ≥2 rows shouldn't happen
-      // post-migration 013 (UNIQUE constraint), but a row created
-      // before the constraint, or a race, would still surface here.
-      const { data: configRows, error: configError } = await supabaseAdmin()
-        .from('whatsapp_config')
-        .select('*')
-        .eq('phone_number_id', phoneNumberId)
-
-      if (configError) {
-        console.error(
-          'Error fetching whatsapp_config for phone_number_id:',
-          phoneNumberId,
-          configError
-        )
-        continue
-      }
-
-      if (!configRows || configRows.length === 0) {
-        console.error('No config found for phone_number_id:', phoneNumberId)
-        continue
-      }
-
-      if (configRows.length > 1) {
-        console.error(
-          `Multiple configs (${configRows.length}) found for phone_number_id:`,
-          phoneNumberId,
-          '— inbound message dropped. Resolve duplicates so each number maps to a single account.',
-          'Account owners:',
-          configRows.map((r: { account_id: string; user_id: string }) => `${r.account_id} (admin ${r.user_id})`)
-        )
-        continue
-      }
-
-      const config = configRows[0]
-
-      // FORK-PATCH(P-008): the delivery's WABA (entry.id) must be the one the
-      // tenant saved. A number that answers for another WABA is a
-      // misconfiguration (or a forged routing) — drop instead of guessing.
-      if (config.waba_id && entry.id && entry.id !== config.waba_id) {
-        console.error('[webhook] WABA mismatch for phone_number_id', phoneNumberId, '— inbound dropped')
-        void logConnectionEvent({
-          accountId: config.account_id,
-          event: 'webhook_rejected',
-          status: 'error',
-          phoneNumberId,
-          wabaId: entry.id,
-          message: `Delivery from WABA ${entry.id} for a number saved under WABA ${config.waba_id}.`,
-        })
-        continue
-      }
       // FORK-PATCH(P-014): the policy decides whether inbound is stored
       // (suspended: yes, without automatic replies — see below).
       if (!(await tenantReceivesInbound(config.account_id))) {
@@ -435,13 +396,18 @@ function isValidStatusTransition(current: string, incoming: string): boolean {
   return ii > ci
 }
 
-async function handleStatusUpdate(status: {
-  id: string
-  status: string
-  timestamp: string
-  recipient_id: string
-  errors?: MetaStatusError[]
-}) {
+async function handleStatusUpdate(
+  status: {
+    id: string
+    status: string
+    timestamp: string
+    recipient_id: string
+    errors?: MetaStatusError[]
+  },
+  // FORK-PATCH(P-008): the organization the delivery was routed to; every
+  // row touched below belongs to it (audit F-19).
+  accountId: string,
+) {
   // Meta's reason for a failed send (#535). Only read on `failed`; a
   // later non-failed status for the same wamid leaves the error
   // columns alone rather than clearing them, so the reason survives.
@@ -472,13 +438,17 @@ async function handleStatusUpdate(status: {
     messageUpdate.error_title = failure.title
     messageUpdate.error_details = failure.details
   }
-  const { error: msgErr } = await supabaseAdmin()
-    .from('messages')
-    .update(messageUpdate)
-    .eq('message_id', status.id)
+  // FORK-PATCH(P-008): only this organization's rows with that wamid.
+  const tenantRows = await tenantMessageRows(accountId, status.id)
+  if (tenantRows.length > 0) {
+    const { error: msgErr } = await supabaseAdmin()
+      .from('messages')
+      .update(messageUpdate)
+      .in('id', tenantRows.map((r) => r.id))
 
-  if (msgErr) {
-    console.error('Error updating message status:', msgErr)
+    if (msgErr) {
+      console.error('Error updating message status:', msgErr)
+    }
   }
 
   // Webhook fan-out for this status change happens at the END of this
@@ -491,11 +461,9 @@ async function handleStatusUpdate(status: {
   //    sent/delivered/read/failed counts automatically.
   const tsIso = new Date(parseInt(status.timestamp) * 1000).toISOString()
 
-  const { data: recipient, error: recFetchErr } = await supabaseAdmin()
-    .from('broadcast_recipients')
-    .select('id, status')
-    .eq('whatsapp_message_id', status.id)
-    .maybeSingle()
+  // FORK-PATCH(P-008): scoped to the routed organization's broadcasts.
+  const { data: recipient, error: recFetchErr } =
+    await tenantBroadcastRecipient(accountId, status.id)
 
   if (recFetchErr) {
     console.error('Error fetching broadcast recipient:', recFetchErr)
@@ -532,28 +500,20 @@ async function handleStatusUpdate(status: {
   //    Runs last so a slow subscriber can't delay the mirrors above.
   //    Bounded to one row (message_id isn't unique) purely to resolve
   //    the owning account for delivery.
-  const { data: msgRow } = await supabaseAdmin()
-    .from('messages')
-    .select('conversation_id, conversations(account_id)')
-    .eq('message_id', status.id)
-    .limit(1)
-    .maybeSingle()
-
+  // FORK-PATCH(P-008): owner = the routed organization (never `.limit(1)`
+  // across tenants).
+  const msgRow = tenantRows[0]
   if (msgRow) {
-    const conv = msgRow.conversations as { account_id: string } | null
-    const accountId = conv?.account_id
-    if (accountId) {
-      await dispatchWebhookEvent(
-        supabaseAdmin(),
-        accountId,
-        'message.status_updated',
-        {
-          whatsapp_message_id: status.id,
-          conversation_id: msgRow.conversation_id,
-          status: status.status,
-        }
-      )
-    }
+    await dispatchWebhookEvent(
+      supabaseAdmin(),
+      accountId,
+      'message.status_updated',
+      {
+        whatsapp_message_id: status.id,
+        conversation_id: msgRow.conversation_id,
+        status: status.status,
+      }
+    )
   }
 }
 
