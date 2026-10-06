@@ -61,6 +61,8 @@ import { GatedButton } from '@/components/ui/gated-button';
 import { useTranslations } from 'next-intl';
 // FORK-PATCH(P-005): Brazilian display mask — docs/BRAZILIAN_CONTACTS.md
 import { formatPhoneDisplay } from '@/modules/br/phone';
+// FORK-PATCH(P-011): usage limits — docs/USAGE.md
+import { PlanLimitNotice } from '@/billing/plan-ui';
 
 const PAGE_SIZE = 25;
 
@@ -346,6 +348,8 @@ export default function ContactsPage() {
 
   return (
     <div className="space-y-6">
+      {/* FORK-PATCH(P-011): limit reached → friendly notice + upgrade */}
+      <PlanLimitNotice feature="max_contacts" />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

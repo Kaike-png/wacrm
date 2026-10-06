@@ -43,6 +43,8 @@ import {
 import { AUTOMATION_TEMPLATES, type TemplateSlug } from "@/lib/automations/templates"
 import { triggerMeta, formatRelative, isKnownTrigger } from "@/lib/automations/trigger-meta"
 import { cn } from "@/lib/utils"
+// FORK-PATCH(P-011): usage limits — docs/USAGE.md
+import { PlanLimitNotice } from '@/billing/plan-ui';
 
 const TEMPLATE_ORDER: TemplateSlug[] = [
   "welcome_message",
@@ -161,6 +163,8 @@ export default function AutomationsPage() {
 
   return (
     <div className="space-y-6">
+      {/* FORK-PATCH(P-011): limit reached → friendly notice + upgrade */}
+      <PlanLimitNotice feature="max_automations" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
