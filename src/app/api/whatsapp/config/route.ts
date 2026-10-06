@@ -23,12 +23,15 @@ import {
 import { encrypt, decrypt } from '@/lib/whatsapp/encryption'
 import { resolveVerifyTokenForSave } from '@/lib/whatsapp/verify-token'
 import { getT } from '@/lib/i18n/translate'
+import { hasMinRole, isAccountRole } from '@/lib/auth/roles'
 // FORK-PATCH(P-008): secrets server-only + connection log — docs/WHATSAPP_SAAS.md
 import { getWhatsAppConfigRow, whatsappConfigAdmin } from '@/custom/whatsapp/config-store'
 import { logConnectionEvent } from '@/custom/whatsapp/connection'
 // FORK-PATCH(P-010): plan limits — docs/PLANS.md
 import { assertWithinLimit } from '@/billing/entitlements'
 import { toErrorResponse } from '@/lib/auth/account'
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement'
 const tFork = getT('Custom.whatsapp.api')
 
 const t = getT('Api')
@@ -556,6 +559,13 @@ export async function POST(request: Request) {
         )
       }
     } else {
+      // FORK-PATCH(P-010): connecting a new number counts against max_whatsapp_accounts.
+      try {
+        await assertWithinLimit(accountId, 'max_whatsapp_accounts')
+        await assertTenantCan(accountId, 'integrations.create') // FORK-PATCH(P-014): delinquency policy
+      } catch (err) {
+        return toErrorResponse(err)
+      }
       // Insert with both columns: `account_id` is the tenancy key
       // (NOT NULL post-017, UNIQUE so duplicates trip the constraint
       // up-front), `user_id` is the audit column identifying which

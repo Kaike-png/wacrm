@@ -11,6 +11,8 @@ import {
 import { getT } from '@/lib/i18n/translate';
 // FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
 import { getWhatsAppConfigRow } from '@/custom/whatsapp/config-store';
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement';
 
 const t = getT('Api');
 
@@ -107,6 +109,7 @@ export async function POST(request: Request) {
     }
 
     const accessToken = decrypt(config.access_token);
+    await assertTenantCan(accountId, 'messages.send'); // FORK-PATCH(P-014): delinquency policy
 
     try {
       await sendReactionMessage({

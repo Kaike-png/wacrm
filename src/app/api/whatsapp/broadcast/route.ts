@@ -18,6 +18,8 @@ import {
 import { getT } from '@/lib/i18n/translate'
 // FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
 import { getWhatsAppConfigRow } from '@/custom/whatsapp/config-store'
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement'
 
 const t = getT('Api')
 
@@ -78,6 +80,7 @@ export async function POST(request: Request) {
     // Nothing about that is recoverable after the fact, so the check has
     // to happen here.
     const { supabase, accountId, userId } = await requireRole('agent')
+    await assertTenantCan(accountId, 'campaigns.send') // FORK-PATCH(P-014): delinquency policy
 
     // Per-user broadcast budget. Note: this limits how often a user
     // can *start* a campaign, not how many messages go out inside

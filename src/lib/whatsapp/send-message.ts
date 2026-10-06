@@ -49,6 +49,8 @@ import {
 } from '@/lib/whatsapp/template-body';
 // FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
 import { getWhatsAppConfigRow, whatsappConfigAdmin } from '@/custom/whatsapp/config-store';
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement';
 
 export const MEDIA_KINDS = ['image', 'video', 'document', 'audio'] as const;
 export const VALID_MESSAGE_TYPES = [
@@ -211,6 +213,7 @@ export async function sendMessageToConversation(
       400
     );
   }
+  await assertTenantCan(accountId, 'messages.send'); // FORK-PATCH(P-014): delinquency policy
 
   validateSendMessageParams({
     messageType,

@@ -34,6 +34,8 @@ import {
 import { getT } from '@/lib/i18n/translate';
 // FORK-PATCH(P-010): plan features — docs/PLANS.md
 import { assertFeatureEnabled } from '@/billing/entitlements';
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement';
 
 const t = getT('Api');
 
@@ -125,6 +127,10 @@ export async function POST(request: Request) {
         Date.now() + days * 24 * 60 * 60 * 1000
       ).toISOString();
     }
+
+    // FORK-PATCH(P-010): API keys only on plans with api_enabled.
+    await assertFeatureEnabled(ctx.accountId, 'api_enabled');
+    await assertTenantCan(ctx.accountId, 'integrations.create'); // FORK-PATCH(P-014): delinquency policy
 
     const { plaintext, hash, prefix } = generateApiKey();
 

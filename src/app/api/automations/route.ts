@@ -11,6 +11,8 @@ import {
 import { getT } from '@/lib/i18n/translate'
 // FORK-PATCH(P-010): plan limits — docs/PLANS.md
 import { assertWithinLimit } from '@/billing/entitlements'
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement'
 
 const t = getT('Api')
 
@@ -59,6 +61,13 @@ export async function POST(request: Request) {
       { error: t('common.profileNotLinked') },
       { status: 403 },
     )
+  }
+  // FORK-PATCH(P-010): max_automations
+  try {
+    await assertWithinLimit(accountId, 'max_automations')
+    await assertTenantCan(accountId, 'automations.run') // FORK-PATCH(P-014): delinquency policy
+  } catch (err) {
+    return toErrorResponse(err)
   }
 
   const body = await request.json().catch(() => null)

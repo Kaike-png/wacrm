@@ -361,6 +361,7 @@ export async function sendTextMessage(
   args: SendTextMessageArgs
 ): Promise<MetaSendResult> {
   const { phoneNumberId, accessToken, to, text, contextMessageId } = args
+  await assertPhoneCan(phoneNumberId, 'messages.send') // FORK-PATCH(P-014): delinquency policy
   const url = `${META_API_BASE}/${phoneNumberId}/messages`
   const body: Record<string, unknown> = {
     messaging_product: 'whatsapp',
@@ -419,6 +420,7 @@ export async function sendMediaMessage(
 ): Promise<MetaSendResult> {
   const { phoneNumberId, accessToken, to, kind, link, caption, filename, contextMessageId } = args
   if (!link) throw new Error('sendMediaMessage requires a link.')
+  await assertPhoneCan(phoneNumberId, 'messages.send') // FORK-PATCH(P-014): delinquency policy
   const url = `${META_API_BASE}/${phoneNumberId}/messages`
 
   // Audio accepts neither caption nor filename per Meta's spec — adding
@@ -513,6 +515,7 @@ export async function sendTemplateMessage(
     messageParams,
     contextMessageId,
   } = args
+  await assertPhoneCan(phoneNumberId, 'messages.send') // FORK-PATCH(P-014): delinquency policy
   const url = `${META_API_BASE}/${phoneNumberId}/messages`
 
   const templatePayload: Record<string, unknown> = {
@@ -650,6 +653,8 @@ export async function uploadResumableMedia(
 // ============================================================
 
 import type { MetaTemplateSubmitPayload } from './template-components'
+// FORK-PATCH(P-014): every outbound WhatsApp message passes the delinquency policy — docs/DELINQUENCY.md
+import { assertPhoneCan } from '@/billing/enforcement'
 
 export interface SubmitMessageTemplateArgs {
   wabaId: string
@@ -806,6 +811,7 @@ export async function sendReactionMessage(
   args: SendReactionMessageArgs
 ): Promise<MetaSendResult> {
   const { phoneNumberId, accessToken, to, targetMessageId, emoji } = args
+  await assertPhoneCan(phoneNumberId, 'messages.send') // FORK-PATCH(P-014): delinquency policy
   const url = `${META_API_BASE}/${phoneNumberId}/messages`
   const response = await fetch(url, {
     method: 'POST',
@@ -989,6 +995,7 @@ export async function sendInteractiveButtons(
   }
   if (contextMessageId) body.context = { message_id: contextMessageId }
 
+  await assertPhoneCan(phoneNumberId, 'messages.send') // FORK-PATCH(P-014): delinquency policy
   const url = `${META_API_BASE}/${phoneNumberId}/messages`
   const response = await fetch(url, {
     method: 'POST',
@@ -1120,6 +1127,7 @@ export async function sendInteractiveList(
   }
   if (contextMessageId) body.context = { message_id: contextMessageId }
 
+  await assertPhoneCan(phoneNumberId, 'messages.send') // FORK-PATCH(P-014): delinquency policy
   const url = `${META_API_BASE}/${phoneNumberId}/messages`
   const response = await fetch(url, {
     method: 'POST',

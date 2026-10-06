@@ -16,6 +16,9 @@
 
 import { NextResponse } from 'next/server';
 import type { RateLimitResult } from '@/lib/rate-limit';
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { restrictionBody } from '@/billing/access-errors';
+import { getT } from '@/lib/i18n/translate';
 
 export type ApiErrorCode =
   | 'unauthorized' // missing / malformed / unknown / revoked / expired key
@@ -119,6 +122,11 @@ export function fail(
  * never leak internal error text onto the public wire.
  */
 export function toApiErrorResponse(err: unknown): NextResponse {
+  // FORK-PATCH(P-014): action blocked by the delinquency policy → 403 tenant_restricted.
+  const restricted = restrictionBody(err, getT('Custom.billing.access'));
+  if (restricted) {
+    return NextResponse.json({ error: { code: restricted.code, message: restricted.error } }, { status: 403 });
+  }
   if (err instanceof ApiError) {
     return NextResponse.json(
       { error: { code: err.code, message: err.message } },

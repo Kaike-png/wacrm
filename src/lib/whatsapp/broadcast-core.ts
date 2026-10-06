@@ -30,6 +30,8 @@ import type { MessageTemplate } from '@/types';
 import { findOrCreateContact } from '@/lib/api/v1/contacts';
 // FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
 import { getWhatsAppConfigRow } from '@/custom/whatsapp/config-store';
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement';
 
 /** Thrown by createBroadcast on a caller-visible failure; route maps it. */
 export class BroadcastError extends Error {
@@ -111,11 +113,8 @@ export async function createBroadcast(
 
   // Config (fail fast + provides the audit trail owner already resolved
   // by the caller). Meta send needs phone_number_id + decrypted token.
-  const { data: config, error: configError } = await db
-    .from('whatsapp_config')
-    .select('*')
-    .eq('account_id', accountId)
-    .single();
+  await assertTenantCan(accountId, 'campaigns.send'); // FORK-PATCH(P-014): delinquency policy
+  const { data: config, error: configError } = await getWhatsAppConfigRow(accountId, db); // FORK-PATCH(P-008): secrets are server-only (905)
   if (configError || !config) {
     throw new BroadcastError(
       'whatsapp_not_configured',

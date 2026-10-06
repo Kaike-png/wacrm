@@ -29,6 +29,8 @@ import { getT } from '@/lib/i18n/translate'
 import { minutesOfDay } from '@/custom/locale/format'
 import { getAccountLocaleSettings } from '@/custom/locale/server'
 import { regionalDefaults } from '@/custom/locale/config'
+// FORK-PATCH(P-014): delinquency policy — docs/DELINQUENCY.md
+import { tenantCan } from '@/billing/enforcement'
 
 /** Step errors land in automation_logs and are shown on the logs page. */
 const tErr = getT('LibErrors.engine')
@@ -74,6 +76,7 @@ export interface DispatchInput {
  */
 export async function runAutomationsForTrigger(input: DispatchInput): Promise<void> {
   try {
+    if (!(await tenantCan(input.accountId, 'automations.run'))) return // FORK-PATCH(P-014)
     const db = supabaseAdmin()
 
     // Tenant isolation. `contactId` can be caller-supplied (the manual
@@ -172,6 +175,12 @@ export async function resumePendingExecution(pending: {
   next_step_position: number
   context: AutomationContext
 }): Promise<void> {
+  // FORK-PATCH(P-014): automations do not run while the delinquency policy
+  // blocks them — the pending step is closed as failed (kept for the record).
+  if (!(await tenantCan(pending.account_id, 'automations.run'))) {
+    await markPending(pending.id, 'failed')
+    return
+  }
   const db = supabaseAdmin()
   const { data: automation, error } = await db
     .from('automations')

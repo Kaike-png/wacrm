@@ -17,6 +17,8 @@ import {
 } from '@/lib/whatsapp/template-body'
 import { supabaseAdmin } from './admin-client'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-014): delinquency policy — docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement'
 
 const t = getT('LibErrors')
 
@@ -147,6 +149,7 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
   }
   const sanitized = sendTarget.target
 
+  await assertTenantCan(input.accountId, 'automations.run') // FORK-PATCH(P-014)
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')
     .select('*')

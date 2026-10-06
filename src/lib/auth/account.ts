@@ -33,6 +33,8 @@ import { hasMinRole, isAccountRole, type AccountRole } from "./roles";
 import { getT } from "@/lib/i18n/translate";
 // FORK-PATCH(P-010): plan limits — docs/PLANS.md
 import { isPlanLimitError, planLimitBody } from "@/billing/errors";
+// FORK-PATCH(P-014): delinquency refusals — docs/DELINQUENCY.md
+import { restrictionBody } from "@/billing/access-errors";
 
 const t = getT("LibErrors.auth");
 
@@ -76,6 +78,9 @@ export function toErrorResponse(err: unknown): NextResponse {
   if (isPlanLimitError(err)) {
     return NextResponse.json(planLimitBody(err, getT("Custom.billing")), { status: 403 });
   }
+  // FORK-PATCH(P-014): action blocked by the delinquency policy (TenantRestrictedError or SQLSTATE TR403) → 403.
+  const restricted = restrictionBody(err, getT("Custom.billing.access"));
+  if (restricted) return NextResponse.json(restricted, { status: 403 });
   if (err instanceof UnauthorizedError || err instanceof ForbiddenError) {
     return NextResponse.json({ error: err.message }, { status: err.status });
   }

@@ -4,6 +4,8 @@ import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { getT } from '@/lib/i18n/translate'
 // FORK-PATCH(P-010): plan limits — docs/PLANS.md
 import { assertWithinLimit } from '@/billing/entitlements'
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement'
 
 const t = getT('Api')
 
@@ -22,6 +24,8 @@ export async function POST(
     const ctx = await requireRole('agent')
     accountId = ctx.accountId
     userId = ctx.userId
+    await assertWithinLimit(accountId, 'max_automations') // FORK-PATCH(P-010)
+    await assertTenantCan(accountId, 'automations.run') // FORK-PATCH(P-014): delinquency policy
   } catch (err) {
     return toErrorResponse(err)
   }

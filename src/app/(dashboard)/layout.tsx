@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "./dashboard-shell";
+// FORK-PATCH(P-014): delinquency banner (past_due / suspended / cancelled) — docs/DELINQUENCY.md
+import { TenantAccessNotice } from "@/billing/access-notice";
 
 // Server layout whose only job is to declare "do not index" metadata
 // for the authed app. robots.ts already disallows these paths at the
@@ -24,5 +26,10 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <DashboardShell>
+      <TenantAccessNotice />{/* FORK-PATCH(P-014) */}
+      {children}
+    </DashboardShell>
+  );
 }

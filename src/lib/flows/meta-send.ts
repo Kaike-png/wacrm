@@ -17,6 +17,8 @@ import { resolveContactSendTarget } from '@/lib/whatsapp/wa-identity'
 import { assertConversationInAccount } from '@/lib/whatsapp/conversation-scope'
 import { supabaseAdmin } from './admin-client'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-014): delinquency policy — docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement'
 
 const t = getT('LibErrors')
 
@@ -45,6 +47,7 @@ export async function loadAccountMetaCredentials(
   db: ReturnType<typeof supabaseAdmin>,
   accountId: string,
 ): Promise<{ phoneNumberId: string; accessToken: string }> {
+  await assertTenantCan(accountId, 'automations.run') // FORK-PATCH(P-014)
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')
     .select('phone_number_id, access_token')

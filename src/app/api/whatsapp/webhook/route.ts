@@ -24,6 +24,8 @@ import {
 } from '@/lib/whatsapp/template-webhook'
 // FORK-PATCH(P-008): tenant routing checks + connection health — docs/WHATSAPP_SAAS.md
 import { logConnectionEvent, noteWebhookReceived } from '@/custom/whatsapp/connection'
+// FORK-PATCH(P-014): delinquency policy — docs/DELINQUENCY.md
+import { tenantCan, tenantReceivesInbound } from '@/billing/enforcement'
 
 // The `after()` callback in POST runs within this route's max duration.
 // Inbound processing can fan out to per-media Meta verification calls, so
@@ -340,6 +342,29 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
       }
 
       const config = configRows[0]
+
+      // FORK-PATCH(P-008): the delivery's WABA (entry.id) must be the one the
+      // tenant saved. A number that answers for another WABA is a
+      // misconfiguration (or a forged routing) — drop instead of guessing.
+      if (config.waba_id && entry.id && entry.id !== config.waba_id) {
+        console.error('[webhook] WABA mismatch for phone_number_id', phoneNumberId, '— inbound dropped')
+        void logConnectionEvent({
+          accountId: config.account_id,
+          event: 'webhook_rejected',
+          status: 'error',
+          phoneNumberId,
+          wabaId: entry.id,
+          message: `Delivery from WABA ${entry.id} for a number saved under WABA ${config.waba_id}.`,
+        })
+        continue
+      }
+      // FORK-PATCH(P-014): the policy decides whether inbound is stored
+      // (suspended: yes, without automatic replies — see below).
+      if (!(await tenantReceivesInbound(config.account_id))) {
+        console.warn('[webhook] organization cancelled — inbound not stored for phone_number_id', phoneNumberId)
+        continue
+      }
+      void noteWebhookReceived(config) // FORK-PATCH(P-008)
 
       const decryptedAccessToken = decrypt(config.access_token)
 
@@ -878,7 +903,10 @@ async function processMessage(
   // no active flows take the runner's early-exit "no_match" path
   // basically for free (one indexed SELECT for the active run).
   // ============================================================
-  const flowResult = await dispatchInboundToFlows({
+  // FORK-PATCH(P-014): no flows, automations or AI replies while the
+  // delinquency policy blocks automations (the message is still stored).
+  const automationsAllowed = await tenantCan(accountId, 'automations.run')
+  const flowResult = automationsAllowed ? await dispatchInboundToFlows({
     accountId,
     userId: configOwnerUserId,
     contactId: contactRecord.id,
@@ -897,7 +925,7 @@ async function processMessage(
             meta_message_id: message.id,
           },
     isFirstInboundMessage,
-  })
+  }) : { consumed: false }
   const flowConsumed = flowResult.consumed
 
   // Fire any automations that react to this webhook event. All dispatches
@@ -941,7 +969,7 @@ async function processMessage(
   // logging zero steps. `runAutomationsForTrigger` owns its own try/catch
   // and never throws; the `.catch` is belt-and-braces so one trigger
   // type's failure can't skip the rest of the loop.
-  for (const triggerType of automationTriggers) {
+  for (const triggerType of automationsAllowed ? automationTriggers : []) {
     await runAutomationsForTrigger({
       accountId,
       triggerType,
@@ -961,7 +989,7 @@ async function processMessage(
   // the account has enabled it. Awaited inside `after()` (same reason as
   // the webhook dispatch below); `dispatchInboundToAiReply` owns its
   // eligibility gates + try/catch and never throws.
-  if (!flowConsumed && !interactiveReplyId && inboundText.trim()) {
+  if (automationsAllowed && !flowConsumed && !interactiveReplyId && inboundText.trim()) {
     await dispatchInboundToAiReply({
       accountId,
       conversationId: conversation.id,

@@ -17,6 +17,8 @@ import {
   generateWebhookSecret,
   normalizeWebhookUrl,
 } from '@/lib/webhooks/endpoints';
+// FORK-PATCH(P-014): docs/DELINQUENCY.md
+import { assertTenantCan } from '@/billing/enforcement';
 
 export async function GET(request: Request) {
   try {
@@ -49,6 +51,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const ctx = await requireApiKey(request, 'webhooks:manage');
+    await assertTenantCan(ctx.accountId, 'integrations.create'); // FORK-PATCH(P-014): delinquency policy
 
     const body = (await request.json().catch(() => null)) as Record<
       string,
