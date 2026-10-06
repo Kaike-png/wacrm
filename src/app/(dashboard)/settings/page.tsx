@@ -22,6 +22,8 @@ import { DealsSettings } from '@/components/settings/deals-settings';
 import { RegionalSettings } from '@/custom/locale/regional-settings';
 // FORK-PATCH(P-006): organization (tenant) registration — docs/TENANCY.md
 import { OrganizationSettings } from '@/modules/br/organization-settings';
+// FORK-PATCH(P-008): WhatsApp connection status card — docs/WHATSAPP_SAAS.md
+import { WhatsAppConnectionStatus } from '@/custom/whatsapp/connection-status';
 import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import {
@@ -80,7 +82,14 @@ function SettingsPageInner() {
     profile: <ProfileForm />,
     security: <SecurityPanel />,
     appearance: <AppearancePanel />,
-    whatsapp: <WhatsAppConfig />,
+    organization: <OrganizationSettings />, // FORK-PATCH(P-006)
+    whatsapp: (
+      <div className="space-y-6">
+        {/* FORK-PATCH(P-008) */}
+        <WhatsAppConnectionStatus />
+        <WhatsAppConfig />
+      </div>
+    ),
     templates: <TemplateManager />,
     'quick-replies': <QuickRepliesManager />,
     fields: <FieldsAndTagsPanel />,

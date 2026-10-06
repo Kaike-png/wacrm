@@ -206,7 +206,8 @@ function InboxPageInner() {
         .eq("account_id", accountId)
         .maybeSingle();
 
-      setWhatsappConnected(data?.status === "connected");
+      // FORK-PATCH(P-008): "pending" (e.g. WABA not subscribed yet) still sends.
+      setWhatsappConnected(data?.status === "connected" || data?.status === "pending");
     };
 
     checkConnection();

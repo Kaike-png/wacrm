@@ -16,6 +16,8 @@ import { buildMetaTemplatePayload } from '@/lib/whatsapp/template-components'
 import { ensureMediaHeaderHandle } from '@/lib/whatsapp/template-header-handle'
 import { normalizeStatus } from '@/lib/whatsapp/template-status-normalize'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
+import { getWhatsAppConfigRow } from '@/custom/whatsapp/config-store'
 
 const t = getT('Api')
 
@@ -141,11 +143,7 @@ export async function POST(request: Request) {
       metaTemplateId = `dry-run-${crypto.randomUUID()}`
       metaStatus = 'PENDING'
     } else {
-      const { data: config, error: configError } = await supabase
-        .from('whatsapp_config')
-        .select('*')
-        .eq('account_id', accountId)
-        .single()
+      const { data: config, error: configError } = await getWhatsAppConfigRow(accountId, supabase) // FORK-PATCH(P-008): secrets are server-only (905)
       if (configError || !config) {
         return NextResponse.json(
           {

@@ -23,6 +23,10 @@ import {
 import { encrypt, decrypt } from '@/lib/whatsapp/encryption'
 import { resolveVerifyTokenForSave } from '@/lib/whatsapp/verify-token'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-008): secrets server-only + connection log — docs/WHATSAPP_SAAS.md
+import { getWhatsAppConfigRow, whatsappConfigAdmin } from '@/custom/whatsapp/config-store'
+import { logConnectionEvent } from '@/custom/whatsapp/connection'
+const tFork = getT('Custom.whatsapp.api')
 
 const t = getT('Api')
 
@@ -124,11 +128,7 @@ export async function GET() {
       )
     }
 
-    const { data: config, error: configError } = await supabase
-      .from('whatsapp_config')
-      .select('phone_number_id, waba_id, access_token, status')
-      .eq('account_id', accountId)
-      .maybeSingle()
+    const { data: config, error: configError } = await getWhatsAppConfigRow(accountId, supabase) // FORK-PATCH(P-008)
 
     if (configError) {
       console.error('Error fetching whatsapp_config:', configError)
@@ -269,8 +269,28 @@ export async function POST(request: Request) {
       )
     }
 
+    // FORK-PATCH(P-008): the row is now written with the service role, so the
+    // admin-only rule RLS enforced before (017) is checked here explicitly.
+    const { data: me } = await supabase
+      .from('profiles')
+      .select('account_role')
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (!isAccountRole(me?.account_role) || !hasMinRole(me.account_role, 'admin')) {
+      return NextResponse.json({ error: tFork('adminOnly') }, { status: 403 })
+    }
+
     const body = await request.json()
     const { phone_number_id, waba_id, access_token, verify_token, pin } = body
+    // FORK-PATCH(P-008): optional Meta Business (portfolio) ID.
+    const business_id: string | null =
+      typeof body.business_id === 'string' && body.business_id.trim() ? body.business_id.trim() : null
+    if (business_id !== null && !isNumericMetaId(business_id)) {
+      return NextResponse.json(
+        { error: tFork('businessIdInvalid'), field: 'business_id' },
+        { status: 400 },
+      )
+    }
 
     if (!access_token || !phone_number_id) {
       return NextResponse.json(
@@ -396,11 +416,7 @@ export async function POST(request: Request) {
     // around), and we need the stored verify_token — the settings form
     // never shows it, so a save that leaves the field blank must keep it
     // rather than null it out.
-    const { data: existing } = await supabase
-      .from('whatsapp_config')
-      .select('id, registered_at, phone_number_id, verify_token')
-      .eq('account_id', accountId)
-      .maybeSingle()
+    const { data: existing } = await getWhatsAppConfigRow(accountId, supabase) // FORK-PATCH(P-008): verify_token is server-only
 
     // Encrypt sensitive tokens before storing
     let encryptedAccessToken: string
@@ -514,11 +530,18 @@ export async function POST(request: Request) {
       subscribed_apps_at: subscribedAppsAt ?? null,
       last_registration_error: registrationError,
       updated_at: new Date().toISOString(),
+      // FORK-PATCH(P-008): Business ID, PIN (encrypted, kept when not re-sent)
+      // and a fresh health state.
+      business_id: business_id ?? existing?.business_id ?? null,
+      pin: typeof pin === 'string' && /^\d{6}$/.test(pin) && registeredAt
+        ? encrypt(pin)
+        : (existing?.pin ?? null),
+      last_check_error: registrationError,
+      last_checked_at: new Date().toISOString(),
     }
 
     if (existing) {
-      const { error: updateError } = await supabase
-        .from('whatsapp_config')
+      const { error: updateError } = await whatsappConfigAdmin() // FORK-PATCH(P-008)
         .update(baseRow)
         .eq('account_id', accountId)
 
@@ -534,8 +557,7 @@ export async function POST(request: Request) {
       // (NOT NULL post-017, UNIQUE so duplicates trip the constraint
       // up-front), `user_id` is the audit column identifying which
       // member of the account saved the config.
-      const { error: insertError } = await supabase
-        .from('whatsapp_config')
+      const { error: insertError } = await whatsappConfigAdmin() // FORK-PATCH(P-008)
         .insert({
           account_id: accountId,
           user_id: user.id,
@@ -550,6 +572,19 @@ export async function POST(request: Request) {
         )
       }
     }
+
+    // FORK-PATCH(P-008): connection log (no secrets).
+    await logConnectionEvent({
+      accountId,
+      event: registrationError ? 'registration_failed' : 'saved',
+      status: registrationError ? 'error' : registrationSkipped ? 'pending' : 'connected',
+      phoneNumberId: phone_number_id,
+      wabaId: waba_id || null,
+      metaErrorCode: registrationMeta?.code ?? null,
+      message: registrationError
+        ?? (registrationSkipped ? 'Saved without /register (no PIN).' : 'Saved and verified with Meta.'),
+      actorUserId: user.id,
+    })
 
     if (registrationError) {
       // Save succeeded but the number isn't actually live. Return
@@ -624,6 +659,7 @@ export async function DELETE() {
       )
     }
 
+    await logConnectionEvent({ accountId, event: 'disconnected', status: 'disconnected', actorUserId: user.id }) // FORK-PATCH(P-008)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error in WhatsApp config DELETE:', error)

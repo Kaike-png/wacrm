@@ -33,6 +33,8 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion';
 import type { WhatsAppConfig as WhatsAppConfigType } from '@/types';
+// FORK-PATCH(P-008): the browser may only read non-secret columns (905).
+import { WHATSAPP_CONFIG_PUBLIC_COLUMNS } from '@/custom/whatsapp/columns';
 
 const MASKED_TOKEN = '••••••••••••••••';
 
@@ -153,9 +155,9 @@ export function WhatsAppConfig() {
       // remains accurate.
       const { data, error } = await supabase
         .from('whatsapp_config')
-        .select('*')
+        .select(WHATSAPP_CONFIG_PUBLIC_COLUMNS) // FORK-PATCH(P-008)
         .eq('account_id', acctId)
-        .maybeSingle();
+        .maybeSingle<WhatsAppConfigType>();
 
       if (error) {
         console.error('Failed to load config row:', error);
@@ -169,7 +171,7 @@ export function WhatsAppConfig() {
         // Same treatment as the access token: the row carries the encrypted
         // value, which is enough to know one exists. Show a mask instead of
         // an empty box so nobody concludes the token was never saved.
-        setVerifyToken(data.verify_token ? MASKED_TOKEN : '');
+        setVerifyToken(data.has_verify_token ? MASKED_TOKEN : ''); // FORK-PATCH(P-008)
         setVerifyEdited(false);
         setPin('');
         setTokenEdited(false);
@@ -822,7 +824,7 @@ export function WhatsAppConfig() {
                 className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
               />
               <p className="text-xs text-muted-foreground">
-                {config?.verify_token && !verifyEdited
+                {config?.has_verify_token && !verifyEdited /* FORK-PATCH(P-008) */
                   ? t('webhookVerifyTokenSaved')
                   : t('webhookVerifyTokenHint')}
               </p>

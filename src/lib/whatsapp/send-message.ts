@@ -47,6 +47,8 @@ import {
   templateBodyParams,
   templateContentText,
 } from '@/lib/whatsapp/template-body';
+// FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
+import { getWhatsAppConfigRow, whatsappConfigAdmin } from '@/custom/whatsapp/config-store';
 
 export const MEDIA_KINDS = ['image', 'video', 'document', 'audio'] as const;
 export const VALID_MESSAGE_TYPES = [
@@ -255,11 +257,7 @@ export async function sendMessageToConversation(
   const sanitizedPhone = hasValidPhone ? sendTarget : '';
 
   // WhatsApp config, account-scoped.
-  const { data: config, error: configError } = await db
-    .from('whatsapp_config')
-    .select('*')
-    .eq('account_id', accountId)
-    .single();
+  const { data: config, error: configError } = await getWhatsAppConfigRow(accountId, db); // FORK-PATCH(P-008): secrets are server-only (905)
 
   if (configError || !config) {
     throw new SendMessageError(
@@ -273,10 +271,11 @@ export async function sendMessageToConversation(
 
   // Self-heal legacy CBC ciphertexts. Fire-and-forget; idempotent.
   if (isLegacyFormat(config.access_token)) {
-    void db
-      .from('whatsapp_config')
+    // FORK-PATCH(P-008): the browser roles cannot write access_token (905).
+    void whatsappConfigAdmin()
       .update({ access_token: encrypt(accessToken) })
       .eq('id', config.id)
+      .eq('account_id', accountId)
       .then(({ error }: { error: { message: string } | null }) => {
         if (error) {
           console.warn(

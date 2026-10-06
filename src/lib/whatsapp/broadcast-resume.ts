@@ -22,6 +22,8 @@ import { BroadcastError, type BroadcastPlan } from '@/lib/whatsapp/broadcast-cor
 import { decrypt } from '@/lib/whatsapp/encryption';
 import { resolveTemplateRow } from '@/lib/whatsapp/template-body';
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils';
+// FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
+import { getWhatsAppConfigRow } from '@/custom/whatsapp/config-store';
 
 /** Which recipients a resume pass picks up. */
 export type ResumeScope = 'pending' | 'failed' | 'all';
@@ -205,11 +207,7 @@ export async function planBroadcastResume(
     );
   }
 
-  const { data: config, error: configError } = await db
-    .from('whatsapp_config')
-    .select('*')
-    .eq('account_id', accountId)
-    .single();
+  const { data: config, error: configError } = await getWhatsAppConfigRow(accountId, db); // FORK-PATCH(P-008): secrets are server-only (905)
   if (configError || !config) {
     throw new BroadcastError(
       'whatsapp_not_configured',

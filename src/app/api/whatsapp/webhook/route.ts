@@ -22,6 +22,8 @@ import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
 } from '@/lib/whatsapp/template-webhook'
+// FORK-PATCH(P-008): tenant routing checks + connection health — docs/WHATSAPP_SAAS.md
+import { logConnectionEvent, noteWebhookReceived } from '@/custom/whatsapp/connection'
 
 // The `after()` callback in POST runs within this route's max duration.
 // Inbound processing can fan out to per-media Meta verification calls, so

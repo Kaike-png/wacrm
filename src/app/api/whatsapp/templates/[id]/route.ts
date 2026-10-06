@@ -17,6 +17,8 @@ import {
 import { buildMetaTemplatePayload } from '@/lib/whatsapp/template-components'
 import { ensureMediaHeaderHandle } from '@/lib/whatsapp/template-header-handle'
 import { getT } from '@/lib/i18n/translate'
+// FORK-PATCH(P-008): WhatsApp secrets via the service role — docs/WHATSAPP_SAAS.md
+import { getWhatsAppConfigRow } from '@/custom/whatsapp/config-store'
 
 const t = getT('Api')
 
@@ -132,11 +134,7 @@ export async function PATCH(
     }
 
     if (!isDryRun()) {
-      const { data: config, error: configError } = await supabase
-        .from('whatsapp_config')
-        .select('*')
-        .eq('account_id', accountId)
-        .single()
+      const { data: config, error: configError } = await getWhatsAppConfigRow(accountId, supabase) // FORK-PATCH(P-008): secrets are server-only (905)
       if (configError || !config) {
         return NextResponse.json(
           { error: t('common.whatsappNotConfiguredDot') },
@@ -257,11 +255,7 @@ export async function DELETE(
     }
 
     if (existing.meta_template_id && !isDryRun()) {
-      const { data: config, error: configError } = await supabase
-        .from('whatsapp_config')
-        .select('*')
-        .eq('account_id', accountId)
-        .single()
+      const { data: config, error: configError } = await getWhatsAppConfigRow(accountId, supabase) // FORK-PATCH(P-008): secrets are server-only (905)
       if (configError || !config || !config.waba_id) {
         return NextResponse.json(
           { error: t('templates.notConfiguredDelete') },

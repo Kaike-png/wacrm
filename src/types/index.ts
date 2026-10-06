@@ -296,9 +296,19 @@ export interface WhatsAppConfig {
   user_id: string;
   phone_number_id: string;
   waba_id?: string;
-  access_token: string;
+  /** Server-only since fork migration 905 — never present in browser reads. */
+  access_token?: string;
+  /** Server-only since fork migration 905 — never present in browser reads. */
   verify_token?: string;
-  status: 'connected' | 'disconnected';
+  // FORK-PATCH(P-008): richer status + non-secret flags (migration 905).
+  status: 'connected' | 'pending' | 'error' | 'disconnected';
+  business_id?: string | null;
+  has_access_token?: boolean;
+  has_verify_token?: boolean;
+  has_pin?: boolean;
+  last_checked_at?: string | null;
+  last_check_error?: string | null;
+  last_webhook_at?: string | null;
   connected_at?: string;
   /**
    * Set when POST /{phone_number_id}/register last succeeded. NULL
